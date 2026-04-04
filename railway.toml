@@ -6,8 +6,8 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# Railway injects $PORT; the Dockerfile uses envsubst to wire nginx to it.
-# The default EXPOSE in the Dockerfile is 8080; Railway overrides via $PORT.
+# Railway injects $PORT; Caddy reads it via {$PORT:8080} in the Caddyfile.
+# Railway's own Traefik proxy sits in front and handles TLS + custom domains.
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
