@@ -10,7 +10,6 @@ COPY . .
 RUN mkdocs build --strict
 
 # ── Stage 2: serve with nginx ─────────────────────────────────────────────────
-# Traefik (the reverse proxy) sits in front; nginx is the static file origin.
 FROM nginx:1.27-alpine
 
 # Remove the default nginx welcome page

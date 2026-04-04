@@ -1,27 +1,8 @@
 services:
-  traefik:
-    # Traefik v3 — reverse proxy / router for local development
-    image: traefik:v3
-    command:
-      - "--api.insecure=true"                    # Dashboard at http://localhost:8080
-      - "--providers.docker=true"                # Auto-discover containers via labels
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"          # Main entry point
-    ports:
-      - "80:80"      # Site: http://localhost
-      - "8080:8080"  # Traefik dashboard: http://localhost:8080
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-
   docs:
-    # Pin to the same version as requirements.txt; bump both together when upgrading.
-    image: squidfunk/mkdocs-material:9.5.18
-    volumes:
-      - .:/docs
-    command: serve --dev-addr=0.0.0.0:8000
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.docs.rule=Host(`localhost`)"
-      - "traefik.http.routers.docs.entrypoints=web"
-      - "traefik.http.services.docs.loadbalancer.server.port=8000"
+    build: .
+    environment:
+      PORT: "8080"
+    ports:
+      - "8080:8080"
 
