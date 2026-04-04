@@ -1,0 +1,9 @@
+services:
+  docs:
+    # Pin to the same version as requirements.txt; bump both together when upgrading.
+    image: squidfunk/mkdocs-material:9.5.18
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/docs
+    command: serve --dev-addr=0.0.0.0:8000

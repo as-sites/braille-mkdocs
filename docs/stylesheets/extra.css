@@ -1,0 +1,90 @@
+/* ============================================================
+   extra.css — Braille Documentation site
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   SECTION 1: Self-hosted braille font (placeholder)
+   ------------------------------------------------------------
+   When you have a braille font file (e.g. SimBraille.ttf or
+   BrailleEnglish.woff2), place it in:
+
+       docs/assets/fonts/
+
+   Then uncomment the @font-face block below and set the
+   correct filename.  Use the CSS class  .braille-font  on any
+   element you want rendered in that typeface.
+
+   Example usage in Markdown (via Material attribute lists):
+       ⠓⠑⠇⠇⠕{ .braille-font }
+
+   Or wrap a block in a div in raw HTML:
+       <div class="braille-font">⠓⠑⠇⠇⠕</div>
+   ------------------------------------------------------------ */
+
+/*
+@font-face {
+  font-family: "BrailleFont";
+  src: url("../assets/fonts/YOUR-FONT-FILE.woff2") format("woff2"),
+       url("../assets/fonts/YOUR-FONT-FILE.ttf")   format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+.braille-font {
+  font-family: "BrailleFont", monospace;
+  font-size: 1.4rem;
+  line-height: 1.8;
+}
+*/
+
+
+/* ------------------------------------------------------------
+   SECTION 2: Braille code blocks
+   Fenced code blocks tagged as ```braille  get these styles.
+   Whitespace and alignment are preserved exactly.
+   ------------------------------------------------------------ */
+
+.language-braille {
+  font-family: monospace;
+  font-size: 1.5rem;     /* larger so dots are clearly visible */
+  line-height: 2;
+  white-space: pre;      /* never wrap — alignment matters in braille */
+  letter-spacing: 0.05em;
+}
+
+
+/* ------------------------------------------------------------
+   SECTION 3: Whitespace-sensitive braille blocks (prose use)
+   Apply class  .braille-block  to a <pre> or <div> that
+   contains raw braille text outside of a fenced code block.
+   ------------------------------------------------------------ */
+
+.braille-block {
+  font-family: monospace;
+  font-size: 1.4rem;
+  line-height: 2;
+  white-space: pre;
+  overflow-x: auto;
+  padding: 0.75rem 1rem;
+  background: var(--md-code-bg-color, #f5f5f5);
+  border-radius: 4px;
+}
+
+
+/* ------------------------------------------------------------
+   SECTION 4: Reference / alignment tables
+   Tables on reference pages rely on column alignment.
+   These rules prevent text wrapping inside cells.
+   ------------------------------------------------------------ */
+
+.md-typeset table.braille-table td,
+.md-typeset table.braille-table th {
+  white-space: nowrap;
+}
+
+/* Make all tables on the reference page horizontally scrollable
+   on narrow screens rather than breaking the layout. */
+.md-typeset .braille-table-wrapper {
+  overflow-x: auto;
+}
