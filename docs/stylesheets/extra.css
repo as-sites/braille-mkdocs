@@ -4,39 +4,34 @@
 
 
 /* ------------------------------------------------------------
-   SECTION 1: Self-hosted braille font (placeholder)
+   SECTION 1: Braille font — SimBraille (CDN)
    ------------------------------------------------------------
-   When you have a braille font file (e.g. SimBraille.ttf or
-   BrailleEnglish.woff2), place it in:
+   SimBraille is loaded from the CDN only for the Braille
+   Patterns Unicode block (U+2800–U+28FF).  The browser will
+   use this font automatically whenever it encounters a braille
+   character anywhere on the page — no extra class needed.
 
-       docs/assets/fonts/
-
-   Then uncomment the @font-face block below and set the
-   correct filename.  Use the CSS class  .braille-font  on any
-   element you want rendered in that typeface.
-
-   Example usage in Markdown (via Material attribute lists):
-       ⠓⠑⠇⠇⠕{ .braille-font }
-
-   Or wrap a block in a div in raw HTML:
-       <div class="braille-font">⠓⠑⠇⠇⠕</div>
+   To self-host instead: download simbrl.ttf, place it in
+   docs/assets/fonts/, change the src URL below to:
+       url("../assets/fonts/simbrl.ttf") format("truetype")
+   and remove the CDN URL.
    ------------------------------------------------------------ */
 
-/*
 @font-face {
-  font-family: "BrailleFont";
-  src: url("../assets/fonts/YOUR-FONT-FILE.woff2") format("woff2"),
-       url("../assets/fonts/YOUR-FONT-FILE.ttf")   format("truetype");
+  font-family: "SimBraille";
+  src: url("https://cdn.ay.ms/simbrl.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
+  unicode-range: U+2800-U+28FF; /* Braille Patterns block only */
 }
 
-.braille-font {
-  font-family: "BrailleFont", monospace;
-  font-size: 1.4rem;
-  line-height: 1.8;
+/* Apply SimBraille (with monospace fallback) to every element.
+   Thanks to unicode-range above, the font file only downloads
+   when the page actually contains braille characters. */
+body {
+  font-family: "SimBraille", var(--md-text-font, sans-serif);
 }
-*/
 
 
 /* ------------------------------------------------------------
@@ -46,7 +41,7 @@
    ------------------------------------------------------------ */
 
 .language-braille {
-  font-family: monospace;
+  font-family: "SimBraille", monospace;
   font-size: 1.5rem;     /* larger so dots are clearly visible */
   line-height: 2;
   white-space: pre;      /* never wrap — alignment matters in braille */
@@ -61,7 +56,7 @@
    ------------------------------------------------------------ */
 
 .braille-block {
-  font-family: monospace;
+  font-family: "SimBraille", monospace;
   font-size: 1.4rem;
   line-height: 2;
   white-space: pre;
