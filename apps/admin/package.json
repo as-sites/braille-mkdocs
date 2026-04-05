@@ -9,6 +9,8 @@
     "lint": "eslint . --ext .ts,.tsx,.cts,.mts"
   },
   "dependencies": {
+    "@braille-docs/editor-schema": "workspace:*",
+    "@braille-docs/shared": "workspace:*",
     "@tiptap/core": "3.22.2",
     "@tiptap/extension-code-block": "3.22.2",
     "@tiptap/extension-image": "3.22.2",
@@ -19,21 +21,19 @@
     "@tiptap/pm": "3.22.2",
     "@tiptap/react": "3.22.2",
     "@tiptap/starter-kit": "3.22.2",
-    "@braille-docs/editor-schema": "workspace:*",
-    "@braille-docs/shared": "workspace:*",
     "better-auth": "^1.5.6",
-    "openapi-fetch": "^0.14.0",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
+    "openapi-fetch": "^0.17.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "react-router": "^7.5.2"
   },
   "devDependencies": {
     "@tiptap/cli": "3.19.0",
-    "@types/react": "^18.3.17",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^5.0.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
     "openapi-typescript": "^7.9.1",
     "sass-embedded": "^1.93.2",
-    "vite": "^7.1.10"
+    "vite": "^8.0.3"
   }
 }

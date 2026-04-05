@@ -8,15 +8,17 @@
     "lint": "nx run-many -t lint"
   },
   "devDependencies": {
-    "@eslint/js": "^9.38.0",
+    "@eslint/js": "^10.0.1",
     "@nx/eslint": "latest",
-    "eslint": "^9.38.0",
-    "globals": "^16.4.0",
+    "eslint": "^10.2.0",
+    "globals": "^17.4.0",
     "nx": "latest",
     "typescript": "latest",
     "typescript-eslint": "^8.46.1"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["nx"]
+    "onlyBuiltDependencies": [
+      "nx"
+    ]
   }
 }
