@@ -1,163 +1,83 @@
-# braille-mkdocs
+# braille-bookstack
 
-A minimal, production-ready documentation site for braille reference material,
-built with [MkDocs](https://www.mkdocs.org/) + [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/).
+This repository is configured to run and deploy [BookStack](https://www.bookstackapp.com/) using Docker, with Railway deployment via `Dockerfile`.
 
----
+## Stack
 
-## What is this?
+- BookStack container: `lscr.io/linuxserver/bookstack:latest`
+- Database: MariaDB `11.4`
+- Local orchestration: Docker Compose
+- Deployment target: Railway
 
-This repo contains:
+No host-level PHP, Composer, or MySQL installation is required.
 
-- A static documentation site covering UEB and Nemeth braille.
-- A [Decap CMS](https://decapcms.org/) editor UI at `/admin/` for browser-based content editing.
-- A Docker-based local development setup.
-- A production Dockerfile for deployment to [Railway](https://railway.app/).
+## Local run
 
----
-
-## Already set up
-
-| What | Where |
-|------|-------|
-| MkDocs + Material config | `mkdocs.yml` |
-| Python dependencies | `requirements.txt` |
-| Local dev (Docker Compose) | `docker-compose.yml` |
-| Production build + nginx | `Dockerfile` + `nginx.conf` |
-| Extra CSS (braille styles) | `docs/stylesheets/extra.css` |
-| Decap CMS entry page | `docs/admin/index.html` |
-| Decap CMS config (placeholder) | `docs/admin/config.yml` |
-| Sample content pages | `docs/index.md`, `docs/ueb/`, `docs/nemeth/`, `docs/reference/` |
-| Font placeholder directory | `docs/assets/fonts/` |
-
----
-
-## Local development
-
-Requires: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (no Python install needed).
+1. Copy `.env.example` to `.env` and set secure values.
+2. Start services:
 
 ```bash
-docker compose up dev
+docker compose up -d
 ```
 
-The docs site is served with live-reload at <http://localhost:8000>. File changes in `docs/` and `mkdocs.yml` reload automatically.
+3. Open <http://localhost:6875>.
 
-To stop: `Ctrl-C`, then `docker compose down`.
+Default BookStack login on first install:
 
-### Preview the production build
+- Email: `admin@admin.com`
+- Password: `password`
 
-To test the nginx production image locally:
+Change this immediately after first login.
+
+## Required environment variables
+
+Set these in `.env` (for local) and Railway variables (for production):
+
+- `APP_URL` (for example `https://your-bookstack-domain.com`)
+- `APP_KEY` (generate using the command below)
+- `MYSQL_ROOT_PASSWORD`
+- `MYSQL_DATABASE`
+- `MYSQL_USER`
+- `MYSQL_PASSWORD`
+
+Optional:
+
+- `PUID`, `PGID` (Linux host file ownership)
+- `TZ`
+- `QUEUE_CONNECTION` (`database` recommended)
+
+Generate an app key:
 
 ```bash
-docker compose build docs
-docker compose up docs
+docker run --rm --entrypoint /bin/bash lscr.io/linuxserver/bookstack:latest -lc 'appkey'
 ```
 
-Served at <http://localhost:8080> (no live-reload).
+## Railway deployment
 
----
+1. Create a Railway project from this repository.
+2. Add a MariaDB service in Railway.
+3. In the BookStack service variables, set:
+   - `APP_URL`
+   - `APP_KEY`
+   - `DB_HOST` (Railway MariaDB host)
+   - `DB_PORT` (usually `3306`)
+   - `DB_DATABASE`
+   - `DB_USERNAME`
+   - `DB_PASSWORD`
+   - `PUID=1000`
+   - `PGID=1000`
+   - `TZ=Australia/Sydney`
+   - `QUEUE_CONNECTION=database`
+4. Deploy. Healthcheck uses `/status` as configured in `railway.toml`.
 
-## Build the static site
+## Files
 
-```bash
-docker compose build docs
-```
+- `docker-compose.yml`: Local BookStack + MariaDB stack
+- `Dockerfile`: Railway image definition
+- `railway.toml`: Railway build/deploy settings
+- `.github/workflows/ci.yml`: Docker build validation
 
-The built site is generated during the image build and copied into nginx at `/usr/share/nginx/html`.
+## Notes on tool versions
 
----
-
-## Files you will edit most often
-
-| File | Purpose |
-|------|---------|
-| `mkdocs.yml` | Site title, nav, theme options |
-| `docs/index.md` | Home page |
-| `docs/ueb/introduction.md` | UEB content |
-| `docs/nemeth/overview.md` | Nemeth content |
-| `docs/reference/ascii-braille-table.md` | Reference table |
-| `docs/stylesheets/extra.css` | Custom CSS / braille font |
-| `docs/admin/config.yml` | Decap CMS backend + collections |
-
----
-
-## Adding content
-
-1. Create a new `.md` file under `docs/`.
-2. Add it to the `nav:` section in `mkdocs.yml`.
-3. Run `docker compose up` and verify it appears in the sidebar.
-
----
-
-## Decap CMS
-
-The editor UI lives at `/admin/` on the deployed site.
-
-The CMS config is at `docs/admin/config.yml`. It currently has **TODO** placeholders
-for the DecapBridge backend values. See the next section for what you need to do manually.
-
----
-
-## Manual follow-up steps
-
-### 1 · DecapBridge (editor login)
-
-1. Create an account at <https://decapbridge.com>.
-2. Register your GitHub repo and this site's URL.
-3. DecapBridge will generate a `backend:` block (with `base_url` and `auth_endpoint`).
-4. Paste that block into `docs/admin/config.yml`, replacing the `# TODO` lines.
-5. Follow DecapBridge's instructions to register an OAuth app in GitHub and store the
-   client secret in DecapBridge — do **not** put secrets in this repo.
-
-### 2 · Railway deployment
-
-1. Push this repo to GitHub (if not already done).
-2. Create a new project on <https://railway.app/> and select **Deploy from GitHub repo**.
-3. Railway will detect the `Dockerfile` automatically.
-4. Set the **Start command** if needed (Railway usually infers it from the Dockerfile).
-5. Railway will assign a public URL (e.g. `https://YOUR-APP.up.railway.app`).
-6. Update `site_url` in `mkdocs.yml` with that URL.
-
-#### Custom domain in Railway
-
-1. In your Railway project, go to **Settings → Networking → Custom Domain**.
-2. Enter your domain (e.g. `docs.yourdomain.com`).
-3. Railway will show you a CNAME record to add in your DNS provider.
-4. Add the CNAME, wait for propagation, and Railway will issue a TLS certificate automatically.
-
-### 3 · Braille font files
-
-1. Obtain a braille font (e.g. `SimBraille.ttf` or a WOFF2 variant).
-2. Place the file in `docs/assets/fonts/`.
-3. Uncomment and update the `@font-face` block in `docs/stylesheets/extra.css`
-   (instructions are inline in that file).
-
----
-
-## Project structure
-
-```
-braille-mkdocs/
-├── mkdocs.yml               # MkDocs + Material config
-├── requirements.txt         # Python dependencies
-├── Dockerfile               # Production build (nginx)
-├── nginx.conf               # nginx config template (Railway $PORT aware)
-├── docker-compose.yml       # Local dev server
-├── .gitignore
-├── README.md
-└── docs/
-    ├── index.md             # Home page
-    ├── ueb/
-    │   └── introduction.md
-    ├── nemeth/
-    │   └── overview.md
-    ├── reference/
-    │   └── ascii-braille-table.md
-    ├── admin/
-    │   ├── index.html       # Decap CMS loader
-    │   └── config.yml       # Decap CMS config (fill in DecapBridge values)
-    ├── assets/
-    │   └── fonts/           # Drop braille font files here
-    └── stylesheets/
-        └── extra.css        # Custom CSS
-```
+Everything needed to run BookStack is contained in Docker images, so no host PHP tooling is required.
+`mise.toml` is kept minimal for this reason.
