@@ -3,14 +3,18 @@
   "defaultBase": "main",
   "targetDefaults": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "cache": true
     },
     "dev": {
       "cache": false
     },
     "typecheck": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "cache": true
     },
     "db:generate": {
@@ -19,5 +23,6 @@
     "db:migrate": {
       "cache": false
     }
-  }
+  },
+  "analytics": true
 }
