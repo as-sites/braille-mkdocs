@@ -6,8 +6,24 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/**/*.test.ts"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "@braille-docs/shared": "workspace:*",
+    "@tiptap/core": "2.11.5",
+    "@tiptap/extension-code-block": "2.11.5",
+    "@tiptap/extension-image": "2.11.5",
+    "@tiptap/extension-link": "2.11.5",
+    "@tiptap/extension-placeholder": "2.11.5",
+    "@tiptap/extension-text-align": "2.11.5",
+    "@tiptap/extension-underline": "2.11.5",
+    "@tiptap/html": "2.11.5",
+    "@tiptap/pm": "2.11.5",
+    "@tiptap/starter-kit": "2.11.5"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "latest"
+  }
 }
