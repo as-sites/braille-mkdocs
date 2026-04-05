@@ -37,10 +37,18 @@ This repo contains:
 Requires: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (no Python install needed).
 
 ```bash
-docker compose up
+docker compose build docs
+docker compose up docs
 ```
 
-The docs site is served with live-reload at <http://localhost:8000>.
+The docs site is served at <http://localhost:8080>.
+
+Because this service runs nginx, it does not live-reload source edits. Rebuild after content changes:
+
+```bash
+docker compose build docs
+docker compose up docs
+```
 
 To stop: `Ctrl-C`, then `docker compose down`.
 
@@ -49,10 +57,10 @@ To stop: `Ctrl-C`, then `docker compose down`.
 ## Build the static site
 
 ```bash
-docker compose run --rm docs build
+docker compose build docs
 ```
 
-The built site is written to `site/` (excluded from git via `.gitignore`).
+The built site is generated during the image build and copied into nginx at `/usr/share/nginx/html`.
 
 ---
 
