@@ -27,6 +27,10 @@
         "/^pnpm nx run-many -t lint --outputStyle=static$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^pnpm --filter @braille-docs/editor-schema test$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

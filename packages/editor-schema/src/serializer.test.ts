@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
-import { generateJSON } from "@tiptap/html";
+import { generateJSON } from "@tiptap/html/server";
 
 import { getExtensions } from "./extensions";
 import { serializeToHtml } from "./serializer";
