@@ -1,4 +1,3 @@
-import { createMcpHonoApp } from "@modelcontextprotocol/hono";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
@@ -29,13 +28,15 @@ function jsonRpcError(id: unknown, code: number, message: string): Response {
 }
 
 export function registerMcpRoutes(app: any) {
-  const mcpApp = createMcpHonoApp();
+  app.all("/mcp", async (c: any) => {
+    let parsedBody: { id?: unknown } | undefined;
+    try {
+      parsedBody = (await c.req.raw.clone().json()) as { id?: unknown };
+    } catch {
+      parsedBody = undefined;
+    }
 
-  mcpApp.all("/mcp", async (c) => {
     const auth = await resolveMcpAuth(c.req.raw);
-    const parsedBody = (c as any).get("parsedBody") as
-      | { id?: unknown }
-      | undefined;
 
     if (auth.status === "invalid") {
       return jsonRpcError(parsedBody?.id, -32001, auth.message);
@@ -63,6 +64,4 @@ export function registerMcpRoutes(app: any) {
       parsedBody,
     });
   });
-
-  app.route("/", mcpApp);
 }
