@@ -1,0 +1,12 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd p:/braille-wiki ; pnpm --filter @braille-docs/api add -D tsx @types/node dotenv$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd p:/braille-wiki ; pnpm --filter @braille-docs/api typecheck 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
