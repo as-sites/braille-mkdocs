@@ -48,6 +48,13 @@ export interface UpdateDocumentInput {
   updatedBy?: string | null;
 }
 
+export interface PublishedDocumentSearchRecord {
+  path: string;
+  title: string;
+  description: string | null;
+  publishedProsemirrorJson: ProsemirrorDocument | null;
+}
+
 function buildPath(parentPath: string | null | undefined, slug: string): string {
   return parentPath ? `${parentPath}/${slug}` : slug;
 }
@@ -95,6 +102,21 @@ export async function getPublishedDocument(
     .limit(1);
 
   return document ?? null;
+}
+
+export async function listPublishedDocumentsForSearch(
+  database: DatabaseClient,
+): Promise<PublishedDocumentSearchRecord[]> {
+  return database
+    .select({
+      path: documents.path,
+      title: documents.title,
+      description: documents.description,
+      publishedProsemirrorJson: documents.publishedProsemirrorJson,
+    })
+    .from(documents)
+    .where(eq(documents.status, "published"))
+    .orderBy(asc(documents.path));
 }
 
 export async function getSidebarTree(

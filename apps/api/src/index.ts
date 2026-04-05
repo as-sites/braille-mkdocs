@@ -2,6 +2,7 @@ import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { auth } from "./auth/index";
 import { createApp } from "./app";
+import { buildIndex } from "./lib/search-index";
 import { registerRoutes } from "./routes";
 import { seedAdmin } from "./seed";
 
@@ -49,5 +50,14 @@ const PORT = Number(process.env.PORT ?? 3001);
 serve({ fetch: app.fetch, port: PORT }, async (info) => {
   console.log(`[api] Listening on http://localhost:${info.port}`);
   console.log(`[api] OpenAPI docs: http://localhost:${info.port}/api/openapi.json`);
+
+  void buildIndex()
+    .then(() => {
+      console.log("[api] Search index ready");
+    })
+    .catch((error) => {
+      console.error("[api] Search index build failed", error);
+    });
+
   await seedAdmin();
 });
