@@ -24,9 +24,9 @@ export const DocumentResponse = z.object({
   slug: z.string(),
   parentPath: z.string().nullable(),
   description: z.string().nullable(),
-  metadata: z.record(z.unknown()).nullable().optional(),
-  prosemirrorJson: z.record(z.unknown()).nullable(),
-  publishedProsemirrorJson: z.record(z.unknown()).nullable(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
+  prosemirrorJson: z.record(z.string(), z.unknown()).nullable(),
+  publishedProsemirrorJson: z.record(z.string(), z.unknown()).nullable(),
   renderedHtml: z.string().nullable(),
   status: DocumentStatus,
   position: z.number().int(),
@@ -46,7 +46,7 @@ export const CreateDocumentRequest = z.object({
 export const UpdateDocumentRequest = z.object({
   title: z.string().optional(),
   description: z.string().nullable().optional(),
-  prosemirrorJson: z.record(z.unknown()).optional(),
+  prosemirrorJson: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const ArchiveDocumentRequest = z.object({});
@@ -65,7 +65,7 @@ export const DocumentListResponse = z.object({
 export const RevisionResponse = z.object({
   id: z.string().uuid(),
   documentId: z.string().uuid(),
-  prosemirrorJson: z.record(z.unknown()).nullable(),
+  prosemirrorJson: z.record(z.string(), z.unknown()).nullable(),
   action: DocumentAction,
   createdBy: z.string().uuid(),
   createdAt: z.string().datetime(),
