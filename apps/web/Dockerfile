@@ -1,19 +1,20 @@
-FROM node:24-alpine AS builder
+FROM alpine:3.20 AS builder
 
 ENV MISE_DATA_DIR=/mise
 ENV MISE_CONFIG_DIR=/mise
 ENV MISE_CACHE_DIR=/mise/cache
 ENV MISE_INSTALL_PATH=/usr/local/bin/mise
+ENV MISE_LIBC=musl
 ENV PATH=/mise/shims:$PATH
 
 WORKDIR /app
 
-RUN apk add --no-cache bash curl ca-certificates \
+RUN apk add --no-cache bash curl ca-certificates python3 \
   && curl https://mise.run | sh
 
-COPY mise.toml /mise/mise.toml
+COPY mise.toml /app/mise.toml
 
-RUN mise trust --yes /mise/mise.toml \
+RUN mise trust --yes /app/mise.toml \
   && mise install \
   && mise reshim
 
@@ -30,14 +31,25 @@ RUN pnpm --filter @braille-docs/db build \
   && pnpm --filter @braille-docs/shared build \
   && pnpm --filter @braille-docs/web build
 
-FROM node:24-alpine AS runner
+FROM alpine:3.20 AS runner
+
+ENV MISE_DATA_DIR=/mise
+ENV MISE_CONFIG_DIR=/mise
+ENV MISE_CACHE_DIR=/mise/cache
+ENV MISE_INSTALL_PATH=/usr/local/bin/mise
+ENV MISE_LIBC=musl
+ENV PATH=/mise/shims:$PATH
 
 WORKDIR /app
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
+RUN apk add --no-cache ca-certificates
+
 COPY --from=builder /app /app
+COPY --from=builder /mise /mise
+COPY --from=builder /usr/local/bin/mise /usr/local/bin/mise
 
 EXPOSE 4321
 
