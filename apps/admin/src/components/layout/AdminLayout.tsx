@@ -6,7 +6,6 @@ import {
   LogOut,
   Menu,
   Settings,
-  X,
 } from "lucide-react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 

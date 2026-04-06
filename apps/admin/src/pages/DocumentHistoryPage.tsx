@@ -8,7 +8,7 @@ import { RevisionViewer } from "../components/revisions/RevisionViewer";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { useToaster } from "../components/shared/Toaster";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const EMPTY_DOC: JSONContent = {

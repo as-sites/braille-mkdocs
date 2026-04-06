@@ -4,9 +4,9 @@ import { describe, test } from "node:test";
 import { generateJSON } from "@tiptap/html/server";
 
 import { getExtensions } from "./extensions";
-import { serializeToHtml } from "./serializer";
+import { serializeToHtmlServer } from "./serializer-server";
 
-describe("serializeToHtml", () => {
+describe("serializeToHtmlServer", () => {
   test("preserves BrailleBlock attrs and whitespace exactly", () => {
     const brailleContent = "line 1\n  line 2\nline   3\n";
 
@@ -24,7 +24,7 @@ describe("serializeToHtml", () => {
       ],
     };
 
-    const html = serializeToHtml(doc);
+    const html = serializeToHtmlServer(doc);
 
     assert.match(html, /<pre[^>]*data-braille-block[^>]*>/);
     assert.match(html, /data-braille-type="Nemeth"/);
@@ -54,9 +54,9 @@ describe("serializeToHtml", () => {
       ],
     };
 
-    const html = serializeToHtml(input);
+    const html = serializeToHtmlServer(input);
     const reparsedJson = generateJSON(html, getExtensions());
-    const roundTrippedHtml = serializeToHtml(reparsedJson);
+    const roundTrippedHtml = serializeToHtmlServer(reparsedJson);
 
     const originalCode = html.match(/<code>([\s\S]*?)<\/code>/)?.[1];
     const roundTripCode = roundTrippedHtml.match(/<code>([\s\S]*?)<\/code>/)?.[1];

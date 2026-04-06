@@ -51,6 +51,10 @@
         "/^pnpm install --filter @braille-wiki/api$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^pnpm nx run @braille-wiki/admin:lint$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

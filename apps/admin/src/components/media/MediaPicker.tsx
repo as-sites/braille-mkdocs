@@ -1,8 +1,5 @@
-import { X } from "lucide-react";
-
 import type { MediaRecord } from "../../api/media";
 import { MediaLibrary } from "./MediaLibrary";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
