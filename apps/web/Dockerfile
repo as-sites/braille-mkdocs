@@ -17,7 +17,8 @@ COPY mise.toml /app/mise.toml
 
 RUN mise trust --yes /app/mise.toml \
   && mise install \
-  && mise reshim
+  && mise reshim \
+  && ln -sf "$(mise where node)/bin/node" /usr/local/bin/node
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json ./
 COPY apps/web/package.json apps/web/package.json
@@ -34,12 +35,6 @@ RUN pnpm --filter @braille-docs/db build \
 
 FROM debian:bookworm-slim AS runner
 
-ENV MISE_DATA_DIR=/mise
-ENV MISE_CONFIG_DIR=/mise
-ENV MISE_CACHE_DIR=/mise/cache
-ENV MISE_INSTALL_PATH=/usr/local/bin/mise
-ENV PATH=/mise/shims:$PATH
-
 WORKDIR /app
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
@@ -50,8 +45,8 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app /app
-COPY --from=builder /mise /mise
-COPY --from=builder /usr/local/bin/mise /usr/local/bin/mise
+COPY --from=builder /mise/installs /mise/installs
+COPY --from=builder /usr/local/bin/node /usr/local/bin/node
 
 EXPOSE 4321
 
