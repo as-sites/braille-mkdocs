@@ -1,11 +1,21 @@
 FROM node:24-alpine AS builder
 
-ENV PNPM_HOME=/pnpm
-ENV PATH=$PNPM_HOME:$PATH
+ENV MISE_DATA_DIR=/mise
+ENV MISE_CONFIG_DIR=/mise
+ENV MISE_CACHE_DIR=/mise/cache
+ENV MISE_INSTALL_PATH=/usr/local/bin/mise
+ENV PATH=/mise/shims:$PATH
 
 WORKDIR /app
 
-RUN corepack enable
+RUN apk add --no-cache bash curl ca-certificates \
+  && curl https://mise.run | sh
+
+COPY mise.toml /mise/mise.toml
+
+RUN mise trust --yes /mise/mise.toml \
+  && mise install \
+  && mise reshim
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json ./
 COPY apps/web/package.json apps/web/package.json

@@ -35,6 +35,10 @@
         "/^pnpm nx affected -t lint --outputStyle=stream$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^pnpm --filter @braille-docs/admin build$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }
