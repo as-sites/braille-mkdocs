@@ -2,7 +2,6 @@
  * Seed script — creates the initial admin user if the user table is empty.
  *
  * Run directly: npx tsx src/seed.ts
- * Or import and call seedAdmin() at server startup.
  *
  * Requires env vars: INITIAL_ADMIN_EMAIL, INITIAL_ADMIN_PASSWORD, DATABASE_URL, BETTER_AUTH_SECRET
  */

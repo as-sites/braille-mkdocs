@@ -1,5 +1,3 @@
-import { randomUUID } from "node:crypto";
-import { extname } from "node:path";
 import sizeOf from "image-size";
 
 import { db } from "@braille-docs/db";
@@ -17,8 +15,20 @@ import { deleteObject, getPublicUrl, uploadObject } from "../lib/storage";
 const database = db;
 
 export interface UploadMediaInput {
+  env: {
+    MEDIA_BUCKET?: {
+      put: (
+        key: string,
+        value: ArrayBuffer | ArrayBufferView | string,
+        options?: { httpMetadata?: { contentType?: string } },
+      ) => Promise<unknown>;
+      delete: (key: string) => Promise<void>;
+    };
+    R2_PUBLIC_URL?: string;
+    S3_PUBLIC_URL?: string;
+  };
   file: {
-    buffer: Buffer;
+    buffer: Uint8Array;
     name: string;
     type: string;
     size: number;
@@ -35,7 +45,7 @@ export interface ListMediaParams {
 }
 
 function getImageDimensions(
-  buffer: Buffer,
+  buffer: Uint8Array,
   mimeType: string,
 ): { width: number | null; height: number | null } {
   if (!mimeType.startsWith("image/") || mimeType === "image/svg+xml") {
@@ -54,12 +64,12 @@ function getImageDimensions(
 }
 
 export async function uploadMedia(input: UploadMediaInput) {
-  const { file, altText, userId } = input;
-  const ext = extname(file.name).toLowerCase();
-  const uuid = randomUUID();
+  const { env, file, altText, userId } = input;
+  const ext = getFileExtension(file.name);
+  const uuid = crypto.randomUUID();
   const storageKey = `media/${uuid}${ext}`;
 
-  await uploadObject(storageKey, file.buffer, file.type);
+  await uploadObject(env, storageKey, file.buffer, file.type);
 
   const { width, height } = getImageDimensions(file.buffer, file.type);
 
@@ -74,24 +84,30 @@ export async function uploadMedia(input: UploadMediaInput) {
     uploadedBy: userId,
   });
 
-  return { ...mediaRow, url: getPublicUrl(mediaRow.storageKey) };
+  return { ...mediaRow, url: getPublicUrl(env, mediaRow.storageKey) };
 }
 
-export async function getMedia(id: string) {
+export async function getMedia(
+  env: { R2_PUBLIC_URL?: string; S3_PUBLIC_URL?: string },
+  id: string,
+) {
   const mediaRow = await getMediaById(database, id);
 
   if (!mediaRow) {
     throw new NotFoundError(`Media not found: ${id}`);
   }
 
-  return { ...mediaRow, url: getPublicUrl(mediaRow.storageKey) };
+  return { ...mediaRow, url: getPublicUrl(env, mediaRow.storageKey) };
 }
 
-export async function listMedia(params: ListMediaParams = {}) {
+export async function listMedia(
+  env: { R2_PUBLIC_URL?: string; S3_PUBLIC_URL?: string },
+  params: ListMediaParams = {},
+) {
   const { rows, total, limit, offset } = await dbListMedia(database, params);
 
   return {
-    media: rows.map((row) => ({ ...row, url: getPublicUrl(row.storageKey) })),
+    media: rows.map((row) => ({ ...row, url: getPublicUrl(env, row.storageKey) })),
     total,
     limit,
     offset,
@@ -99,6 +115,7 @@ export async function listMedia(params: ListMediaParams = {}) {
 }
 
 export async function updateMedia(
+  env: { R2_PUBLIC_URL?: string; S3_PUBLIC_URL?: string },
   id: string,
   data: { altText?: string | null; filename?: string },
 ) {
@@ -108,10 +125,22 @@ export async function updateMedia(
     throw new NotFoundError(`Media not found: ${id}`);
   }
 
-  return { ...mediaRow, url: getPublicUrl(mediaRow.storageKey) };
+  return { ...mediaRow, url: getPublicUrl(env, mediaRow.storageKey) };
 }
 
-export async function deleteMedia(id: string) {
+export async function deleteMedia(
+  env: {
+    MEDIA_BUCKET?: {
+      put: (
+        key: string,
+        value: ArrayBuffer | ArrayBufferView | string,
+        options?: { httpMetadata?: { contentType?: string } },
+      ) => Promise<unknown>;
+      delete: (key: string) => Promise<void>;
+    };
+  },
+  id: string,
+) {
   const mediaRow = await getMediaById(database, id);
 
   if (!mediaRow) {
@@ -121,10 +150,20 @@ export async function deleteMedia(id: string) {
   // Check if the media ID is referenced in any document's prosemirror_json
   const referenced = await isMediaReferenced(id);
 
-  await deleteObject(mediaRow.storageKey);
+  await deleteObject(env, mediaRow.storageKey);
   await dbDeleteMedia(database, id);
 
   return { id, referenced };
+}
+
+function getFileExtension(filename: string): string {
+  const lastDot = filename.lastIndexOf(".");
+
+  if (lastDot <= 0 || lastDot === filename.length - 1) {
+    return "";
+  }
+
+  return filename.slice(lastDot).toLowerCase();
 }
 
 async function isMediaReferenced(mediaId: string): Promise<boolean> {

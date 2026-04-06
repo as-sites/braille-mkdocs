@@ -54,7 +54,7 @@ export function registerAdminMediaRoutes(app: OpenAPIHono) {
     }
 
     const { mimeType, search, limit, offset } = c.req.valid("query");
-    const result = await listMedia({ mimeType, search, limit, offset });
+    const result = await listMedia(c.env ?? {}, { mimeType, search, limit, offset });
 
     return c.json(result, 200);
   });
@@ -130,8 +130,9 @@ export function registerAdminMediaRoutes(app: OpenAPIHono) {
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const buffer = new Uint8Array(await file.arrayBuffer());
     const mediaRecord = await uploadMedia({
+      env: c.env ?? {},
       file: {
         buffer,
         name: file.name,
@@ -192,7 +193,7 @@ export function registerAdminMediaRoutes(app: OpenAPIHono) {
 
     const { id } = c.req.valid("param");
     const body = c.req.valid("json");
-    const mediaRecord = await updateMedia(id, body);
+    const mediaRecord = await updateMedia(c.env ?? {}, id, body);
 
     return c.json(mediaRecord, 200);
   });
@@ -236,7 +237,7 @@ export function registerAdminMediaRoutes(app: OpenAPIHono) {
     }
 
     const { id } = c.req.valid("param");
-    const result = await deleteMedia(id);
+    const result = await deleteMedia(c.env ?? {}, id);
 
     return c.json(result, 200);
   });

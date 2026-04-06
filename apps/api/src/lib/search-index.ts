@@ -41,6 +41,7 @@ type SearchIndex = Awaited<ReturnType<typeof createSearchIndex>>;
 let indexPromise: Promise<SearchIndex> = Promise.resolve(createSearchIndex());
 let pathToInternalId = new Map<string, string>();
 let buildPromise: Promise<void> | null = null;
+let hasBuiltInitialIndex = false;
 
 function getWorkFromPath(path: string): string {
   return path.split("/").filter(Boolean)[0] ?? path;
@@ -106,6 +107,7 @@ export async function buildIndex(): Promise<void> {
 
     indexPromise = Promise.resolve(nextIndex);
     pathToInternalId = nextIdMap;
+    hasBuiltInitialIndex = true;
 
     console.log(
       `[api] Search index built: ${documents.length} documents in ${Date.now() - startedAt} ms`,
@@ -135,5 +137,9 @@ export async function removeFromIndex(path: string): Promise<void> {
 }
 
 export async function getIndex(): Promise<SearchIndex> {
+  if (!hasBuiltInitialIndex) {
+    await buildIndex();
+  }
+
   return indexPromise;
 }

@@ -2,15 +2,15 @@
   "name": "@braille-docs/api",
   "private": true,
   "scripts": {
-    "build": "echo 'build not yet configured'",
-    "dev": "tsx watch src/index.ts",
+    "build": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "dev:node": "tsx watch src/index.ts",
     "seed": "tsx src/seed.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx,.cts,.mts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1024.0",
-    "@aws-sdk/s3-request-presigner": "^3.1024.0",
     "@better-auth/api-key": "^1.5.6",
     "@braille-docs/db": "workspace:*",
     "@braille-docs/editor-schema": "workspace:*",
@@ -29,6 +29,7 @@
     "@types/node": "^25.5.2",
     "dotenv": "^17.4.0",
     "tsx": "^4.21.0",
-    "vitest": "^3.2.2"
+    "vitest": "^3.2.2",
+    "wrangler": "^4.42.1"
   }
 }

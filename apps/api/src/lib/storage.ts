@@ -1,63 +1,53 @@
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+interface R2BucketLike {
+  put(
+    key: string,
+    value: ArrayBuffer | ArrayBufferView | string,
+    options?: { httpMetadata?: { contentType?: string } },
+  ): Promise<unknown>;
+  delete(key: string): Promise<void>;
+}
 
-const accountId = process.env.R2_ACCOUNT_ID ?? "";
-const accessKeyId = process.env.S3_ACCESS_KEY_ID ?? process.env.R2_ACCESS_KEY_ID ?? "";
-const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY ?? process.env.R2_SECRET_ACCESS_KEY ?? "";
-const bucketName = process.env.S3_BUCKET_NAME ?? process.env.R2_BUCKET_NAME ?? "";
-const endpoint = process.env.S3_ENDPOINT ??
-  (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined);
-const region = process.env.S3_REGION ?? "auto";
-const forcePathStyle = (process.env.S3_FORCE_PATH_STYLE ?? "false").toLowerCase() === "true";
+interface StorageEnv {
+  MEDIA_BUCKET?: R2BucketLike;
+  R2_PUBLIC_URL?: string;
+  S3_PUBLIC_URL?: string;
+}
 
-export const storageClient = new S3Client({
-  endpoint,
-  credentials: {
-    accessKeyId,
-    secretAccessKey,
-  },
-  region,
-  forcePathStyle,
-});
+function resolveBucket(env: StorageEnv): R2BucketLike {
+  const bucket = env.MEDIA_BUCKET;
+
+  if (!bucket) {
+    throw new Error("MEDIA_BUCKET binding is not configured");
+  }
+
+  return bucket;
+}
 
 export async function uploadObject(
+  env: StorageEnv,
   key: string,
-  body: Buffer,
+  body: ArrayBuffer | ArrayBufferView | string,
   contentType: string,
 ): Promise<void> {
-  await storageClient.send(
-    new PutObjectCommand({
-      Bucket: bucketName,
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-    }),
-  );
+  const bucket = resolveBucket(env);
+
+  await bucket.put(key, body, {
+    httpMetadata: {
+      contentType,
+    },
+  });
 }
 
-export async function deleteObject(key: string): Promise<void> {
-  await storageClient.send(
-    new DeleteObjectCommand({
-      Bucket: bucketName,
-      Key: key,
-    }),
-  );
+export async function deleteObject(env: StorageEnv, key: string): Promise<void> {
+  const bucket = resolveBucket(env);
+  await bucket.delete(key);
 }
 
-export function getPublicUrl(key: string): string {
-  const publicUrl = process.env.S3_PUBLIC_URL ?? process.env.R2_PUBLIC_URL;
+export function getPublicUrl(env: StorageEnv, key: string): string {
+  const publicUrl = env.R2_PUBLIC_URL ?? env.S3_PUBLIC_URL ?? process.env.R2_PUBLIC_URL ?? process.env.S3_PUBLIC_URL;
 
   if (publicUrl) {
     return `${publicUrl.replace(/\/$/, "")}/${key}`;
-  }
-
-  if (accountId) {
-    // Fallback: direct R2 public bucket URL.
-    return `https://${accountId}.r2.cloudflarestorage.com/${bucketName}/${key}`;
-  }
-
-  if (endpoint) {
-    // Generic fallback for S3-compatible endpoints.
-    return `${endpoint.replace(/\/$/, "")}/${bucketName}/${key}`;
   }
 
   return key;
