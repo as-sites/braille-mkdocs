@@ -3,6 +3,11 @@ compatibility_date = "2026-04-06"
 compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
 pages_build_output_dir = "./dist"
 
+[observability]
+[observability.logs]
+enabled = true
+invocation_logs = true
+
 [[routes]]
 pattern = "admin.braille.ay.ms"
 custom_domain = true

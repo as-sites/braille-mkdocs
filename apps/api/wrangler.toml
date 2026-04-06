@@ -11,6 +11,11 @@ R2_PUBLIC_URL = "https://s3.braille.ay.ms"
 binding = "MEDIA_BUCKET"
 bucket_name = "braille-wiki"
 
+[observability]
+[observability.logs]
+enabled = true
+invocation_logs = true
+
 [[routes]]
 pattern = "api.braille.ay.ms"
 custom_domain = true
