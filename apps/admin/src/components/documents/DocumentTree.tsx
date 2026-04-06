@@ -23,25 +23,18 @@ export function DocumentTree({ nodes, onArchive, onReorder }: DocumentTreeProps)
   }, [nodes]);
 
   const toggle = (id: string) => {
-    setExpanded((previous) => ({
-      ...previous,
-      [id]: !previous[id],
-    }));
+    setExpanded((previous) => ({ ...previous, [id]: !previous[id] }));
   };
 
   async function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
-    if (!over || active.id === over.id) {
-      return;
-    }
+    if (!over || active.id === over.id) return;
 
     const oldIndex = rootIds.indexOf(String(active.id));
     const newIndex = rootIds.indexOf(String(over.id));
 
-    if (oldIndex === -1 || newIndex === -1) {
-      return;
-    }
+    if (oldIndex === -1 || newIndex === -1) return;
 
     const reordered = arrayMove(localNodes, oldIndex, newIndex);
     setLocalNodes(reordered);
@@ -52,7 +45,7 @@ export function DocumentTree({ nodes, onArchive, onReorder }: DocumentTreeProps)
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <SortableContext items={rootIds} strategy={verticalListSortingStrategy}>
-        <ul className="tree-list">
+        <ul className="space-y-1.5 list-none p-0 m-0">
           {localNodes.map((node) => (
             <TreeBranch
               key={node.id}

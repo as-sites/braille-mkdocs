@@ -12,12 +12,7 @@ export function LoginPage() {
   }
 
   return (
-    <main className="login-page">
-      <section className="card">
-        <h1>Sign in</h1>
-        <p>Use your staff account to manage documents.</p>
-      </section>
-
+    <main className="flex items-center justify-center min-h-screen bg-background">
       <LoginForm
         onSuccess={() => {
           void refresh().finally(() => {

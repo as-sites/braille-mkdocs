@@ -4,6 +4,10 @@ import { Link, useParams } from "react-router";
 
 import { getDocument, publishDocument, type AdminDocument } from "../api/client";
 import { useToaster } from "../components/shared/Toaster";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function DocumentPreviewPage() {
   const { id = "" } = useParams();
@@ -19,32 +23,20 @@ export function DocumentPreviewPage() {
       setLoading(true);
       try {
         const nextDocument = await getDocument(id);
-        if (!cancelled) {
-          setDocument(nextDocument);
-        }
+        if (!cancelled) setDocument(nextDocument);
       } catch {
-        if (!cancelled) {
-          showToast("Could not load document preview.", "error");
-        }
+        if (!cancelled) showToast("Could not load document preview.", "error");
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     }
 
     void load();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [id, showToast]);
 
   const html = useMemo(() => {
-    if (!document?.prosemirrorJson) {
-      return "<p>This draft has no content yet.</p>";
-    }
-
+    if (!document?.prosemirrorJson) return "<p>This draft has no content yet.</p>";
     return serializeToHtml(document.prosemirrorJson as any);
   }, [document]);
 
@@ -58,22 +50,39 @@ export function DocumentPreviewPage() {
   }
 
   return (
-    <div className="page-stack">
-      <section className="card warning-box">
-        <h1>Draft preview</h1>
-        <p>This is a preview of the current draft. Publish to make it live.</p>
-        <div className="inline-form">
-          <Link to={`/documents/${id}/edit`}>Back to edit</Link>
-          <button type="button" onClick={onPublish}>
-            Publish now
-          </button>
-        </div>
-      </section>
+    <div className="space-y-4">
+      <Alert>
+        <AlertTitle>Draft preview</AlertTitle>
+        <AlertDescription className="space-y-3">
+          <p>This is a preview of the current draft. Publish to make it live.</p>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" asChild>
+              <Link to={`/documents/${id}/edit`}>Back to edit</Link>
+            </Button>
+            <Button size="sm" onClick={onPublish}>
+              Publish now
+            </Button>
+          </div>
+        </AlertDescription>
+      </Alert>
 
-      <section className="card preview-content">
-        {loading ? <p>Loading preview...</p> : null}
-        <article dangerouslySetInnerHTML={{ __html: html }} />
-      </section>
+      <Card>
+        <CardContent className="pt-6">
+          {loading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          ) : (
+            <article
+              className="prose prose-stone max-w-3xl"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

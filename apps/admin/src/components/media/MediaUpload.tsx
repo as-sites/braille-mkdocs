@@ -1,3 +1,4 @@
+import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { uploadMedia } from "../../api/media";
 import type { MediaRecord } from "../../api/media";
@@ -51,7 +52,6 @@ export function MediaUpload({ onUploaded }: MediaUploadProps) {
   function onDrop(e: React.DragEvent) {
     e.preventDefault();
     setDragging(false);
-
     const file = e.dataTransfer.files[0];
     if (file) void handleFile(file);
   }
@@ -63,23 +63,28 @@ export function MediaUpload({ onUploaded }: MediaUploadProps) {
   }
 
   return (
-    <div className="media-upload">
+    <div className="space-y-2">
       <div
-        className={`media-upload__dropzone${dragging ? " media-upload__dropzone--active" : ""}`}
+        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+          dragging
+            ? "border-primary bg-primary/5"
+            : "border-border hover:border-primary/50"
+        }`}
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
       >
         {uploading ? (
-          <p>Uploading...</p>
+          <p className="text-sm text-muted-foreground">Uploading...</p>
         ) : (
-          <>
-            <p>Drag &amp; drop a file here, or click to browse</p>
-            <p className="media-upload__hint">
-              PNG, JPG, GIF, SVG, WebP, PDF · max 10 MB
+          <div className="space-y-1">
+            <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="text-sm">Drag & drop a file here, or click to browse</p>
+            <p className="text-xs text-muted-foreground">
+              PNG, JPG, GIF, SVG, WebP, PDF &middot; max 10 MB
             </p>
-          </>
+          </div>
         )}
       </div>
 
@@ -87,11 +92,11 @@ export function MediaUpload({ onUploaded }: MediaUploadProps) {
         ref={inputRef}
         type="file"
         accept={ALLOWED_TYPES.join(",")}
-        style={{ display: "none" }}
+        className="hidden"
         onChange={onInputChange}
       />
 
-      {error && <p className="media-upload__error">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }

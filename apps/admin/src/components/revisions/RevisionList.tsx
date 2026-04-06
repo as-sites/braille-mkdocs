@@ -1,4 +1,7 @@
 import type { AdminRevision } from "../../api/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type RevisionListProps = {
   revisions: AdminRevision[];
@@ -7,38 +10,36 @@ type RevisionListProps = {
 };
 
 function actionLabel(action: AdminRevision["action"]) {
-  if (action === "publish") {
-    return "Published";
-  }
-
-  if (action === "rollback") {
-    return "Rolled back";
-  }
-
+  if (action === "publish") return "Published";
+  if (action === "rollback") return "Rolled back";
   return "Saved";
 }
 
 export function RevisionList({ revisions, selectedRevisionId, onSelect }: RevisionListProps) {
   return (
-    <div className="card">
-      <h2>Revision history</h2>
-
-      <ul className="revision-list">
-        {revisions.map((revision) => (
-          <li key={revision.id}>
-            <button
-              type="button"
-              className={selectedRevisionId === revision.id ? "is-active" : ""}
-              onClick={() => {
-                onSelect(revision.id);
-              }}
-            >
-              <strong>{actionLabel(revision.action)}</strong>
-              <span>{new Date(revision.createdAt).toLocaleString()}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Revision history</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <ScrollArea className="h-[500px]">
+          <div className="space-y-1 p-3">
+            {revisions.map((revision) => (
+              <Button
+                key={revision.id}
+                variant={selectedRevisionId === revision.id ? "secondary" : "ghost"}
+                className="w-full justify-between h-auto py-2"
+                onClick={() => onSelect(revision.id)}
+              >
+                <strong className="text-sm">{actionLabel(revision.action)}</strong>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(revision.createdAt).toLocaleString()}
+                </span>
+              </Button>
+            ))}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 }

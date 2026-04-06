@@ -9,34 +9,29 @@ import {
   type AdminDocument,
 } from "../api/client";
 import { Editor } from "../components/editor/Editor";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 
 const EMPTY_DOC: JSONContent = {
   type: "doc",
-  content: [
-    {
-      type: "paragraph",
-    },
-  ],
+  content: [{ type: "paragraph" }],
 };
 
 function formatTime(value: string | null): string {
-  if (!value) {
-    return "-";
-  }
-
+  if (!value) return "-";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString();
 }
 
 function safeParseMetadata(value: string): Record<string, unknown> | null {
   const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
+  if (!trimmed) return null;
 
   const parsed = JSON.parse(trimmed) as unknown;
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -47,10 +42,7 @@ function safeParseMetadata(value: string): Record<string, unknown> | null {
 }
 
 function getEditorDoc(document: AdminDocument | null, editorJson: JSONContent): JSONContent {
-  if (!document) {
-    return editorJson;
-  }
-
+  if (!document) return editorJson;
   const source = document.prosemirrorJson as JSONContent | null;
   return source && source.type ? source : EMPTY_DOC;
 }
@@ -84,9 +76,7 @@ export function DocumentEditPage() {
 
       try {
         const nextDocument = await getDocument(id);
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
         setDocument(nextDocument);
         setEditorJson((nextDocument.prosemirrorJson as JSONContent | null) ?? EMPTY_DOC);
@@ -96,46 +86,31 @@ export function DocumentEditPage() {
         setLastSaveTime(nextDocument.updatedAt);
         setDirty(false);
       } catch {
-        if (!cancelled) {
-          setError("Unable to load the document.");
-        }
+        if (!cancelled) setError("Unable to load the document.");
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     }
 
     void load();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [id]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (!dirty) {
-        return;
-      }
-
+      if (!dirty) return;
       event.preventDefault();
       event.returnValue = "";
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [dirty]);
 
   const editorContent = useMemo(() => getEditorDoc(document, editorJson), [document, editorJson]);
 
   async function onSave() {
-    if (!id) {
-      return;
-    }
+    if (!id) return;
 
     try {
       const metadata = safeParseMetadata(metadataText);
@@ -158,105 +133,110 @@ export function DocumentEditPage() {
   }
 
   async function onPublish() {
-    if (!id) {
-      return;
-    }
+    if (!id) return;
 
     try {
       const updated = await publishDocument(id);
       setDocument(updated);
       setError(null);
     } catch (publishError) {
-      const message =
-        publishError instanceof Error ? publishError.message : "Failed to publish document";
+      const message = publishError instanceof Error ? publishError.message : "Failed to publish document";
       setError(message);
     }
   }
 
   if (loading) {
-    return <p>Loading document...</p>;
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+    );
   }
 
   if (error && !document) {
-    return <p>{error}</p>;
+    return <p className="text-destructive">{error}</p>;
   }
 
   return (
-    <div className="editor-page">
-      <header className="editor-page__header">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1>Edit Document</h1>
-          <p>{document?.path}</p>
+          <h1 className="text-xl font-bold">Edit Document</h1>
+          <p className="text-sm text-muted-foreground">{document?.path}</p>
         </div>
 
-        <div className="editor-page__actions">
-          <button type="button" onClick={onSave}>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onSave}>
             Save
-          </button>
-          <button type="button" onClick={onPublish}>
+          </Button>
+          <Button onClick={onPublish}>
             Publish
-          </button>
+          </Button>
         </div>
-      </header>
+      </div>
 
-      <section className="editor-page__status">
-        <span>Status: {document?.status ?? "draft"}</span>
-        <span>Last save: {formatTime(lastSaveTime)}</span>
-        <span>Last publish: {formatTime(document?.publishedAt ?? null)}</span>
-        {dirty ? <span className="status-dirty">Unsaved changes</span> : null}
-      </section>
+      <Card>
+        <CardContent className="flex items-center justify-between gap-4 flex-wrap py-3">
+          <span className="text-sm text-muted-foreground">
+            Status: <Badge variant="outline">{document?.status ?? "draft"}</Badge>
+          </span>
+          <span className="text-sm text-muted-foreground">Last save: {formatTime(lastSaveTime)}</span>
+          <span className="text-sm text-muted-foreground">Last publish: {formatTime(document?.publishedAt ?? null)}</span>
+          {dirty && <span className="text-sm font-bold text-amber-600">Unsaved changes</span>}
+        </CardContent>
+      </Card>
 
-      {error ? <p className="status-error">{error}</p> : null}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="editor-page__body">
-        <section className="editor-page__editor">
-          <Editor
-            initialContent={editorContent}
-            onUpdate={(nextJson) => {
-              setEditorJson(nextJson);
-              setDirty(true);
-            }}
-          />
-        </section>
-
-        <aside className="editor-page__meta">
-          <h2>Metadata</h2>
-
-          <label>
-            Title
-            <input
-              type="text"
-              value={title}
-              onChange={(event) => {
-                setTitle(event.target.value);
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4">
+        <Card>
+          <CardContent className="p-0">
+            <Editor
+              initialContent={editorContent}
+              onUpdate={(nextJson) => {
+                setEditorJson(nextJson);
                 setDirty(true);
               }}
             />
-          </label>
+          </CardContent>
+        </Card>
 
-          <label>
-            Description
-            <textarea
-              value={description}
-              onChange={(event) => {
-                setDescription(event.target.value);
-                setDirty(true);
-              }}
-            />
-          </label>
+        <Card>
+          <CardContent className="space-y-4 pt-6">
+            <h2 className="font-semibold">Metadata</h2>
 
-          <label>
-            Metadata JSON
-            <textarea
-              value={metadataText}
-              onChange={(event) => {
-                setMetadataText(event.target.value);
-                setDirty(true);
-              }}
-              rows={12}
-            />
-          </label>
-        </aside>
+            <div className="grid gap-2">
+              <Label htmlFor="doc-title">Title</Label>
+              <Input
+                id="doc-title"
+                type="text"
+                value={title}
+                onChange={(e) => { setTitle(e.target.value); setDirty(true); }}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="doc-description">Description</Label>
+              <Textarea
+                id="doc-description"
+                value={description}
+                onChange={(e) => { setDescription(e.target.value); setDirty(true); }}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="doc-metadata">Metadata JSON</Label>
+              <Textarea
+                id="doc-metadata"
+                value={metadataText}
+                onChange={(e) => { setMetadataText(e.target.value); setDirty(true); }}
+                rows={12}
+                className="font-mono text-sm"
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

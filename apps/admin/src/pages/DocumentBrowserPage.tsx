@@ -5,6 +5,17 @@ import { DocumentTree } from "../components/documents/DocumentTree";
 import type { TreeNode } from "../components/documents/DocumentTreeItem";
 import { ConfirmDialog } from "../components/shared/ConfirmDialog";
 import { useToaster } from "../components/shared/Toaster";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function getParentPath(path: string): string {
   const index = path.lastIndexOf("/");
@@ -30,7 +41,6 @@ function buildTree(items: AdminDocumentSummary[]): TreeNode[] {
 
   for (const node of byPath.values()) {
     const parent = byPath.get(node.parentPath);
-
     if (parent) {
       parent.children.push(node);
     } else {
@@ -42,15 +52,11 @@ function buildTree(items: AdminDocumentSummary[]): TreeNode[] {
 
   const visit = (node: TreeNode) => {
     node.children.sort(sortByPath);
-    for (const child of node.children) {
-      visit(child);
-    }
+    for (const child of node.children) visit(child);
   };
 
   roots.sort(sortByPath);
-  for (const root of roots) {
-    visit(root);
-  }
+  for (const root of roots) visit(root);
 
   return roots;
 }
@@ -92,9 +98,7 @@ export function DocumentBrowserPage() {
   }
 
   async function confirmArchive() {
-    if (!archiveTarget) {
-      return;
-    }
+    if (!archiveTarget) return;
 
     try {
       await archiveDocument(archiveTarget.id);
@@ -107,65 +111,75 @@ export function DocumentBrowserPage() {
   }
 
   return (
-    <div className="page-stack">
-      <section className="card">
-        <h1>Document Browser</h1>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Document Browser</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="flex items-center gap-3 flex-wrap" onSubmit={onSearchSubmit}>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="draft">Draft only</SelectItem>
+                <SelectItem value="published">Published only</SelectItem>
+                <SelectItem value="archived">Archived only</SelectItem>
+              </SelectContent>
+            </Select>
 
-        <form className="inline-form" onSubmit={onSearchSubmit}>
-          <select
-            value={statusFilter}
-            onChange={(event) => {
-              setStatusFilter(event.target.value as "all" | "draft" | "published" | "archived");
-            }}
-          >
-            <option value="all">All statuses</option>
-            <option value="draft">Draft only</option>
-            <option value="published">Published only</option>
-            <option value="archived">Archived only</option>
-          </select>
+            <Input
+              type="search"
+              placeholder="Search by title"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-64"
+            />
 
-          <input
-            type="search"
-            placeholder="Search by title"
-            value={searchText}
-            onChange={(event) => {
-              setSearchText(event.target.value);
-            }}
-          />
+            <Button type="submit" variant="secondary">
+              Apply
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-          <button type="submit">Apply</button>
-        </form>
-      </section>
-
-      <section className="card">
-        {loading ? <p>Loading tree...</p> : null}
-        <DocumentTree
-          nodes={tree}
-          onArchive={(node) => {
-            setArchiveTarget(node);
-          }}
-          onReorder={async (parentPath, children) => {
-            try {
-              await reorderChildren({ parentPath, children });
-              showToast("Order saved.", "success");
-            } catch {
-              showToast("Could not save the new order.", "error");
-            }
-          }}
-        />
-      </section>
+      <Card>
+        <CardContent className="pt-6">
+          {loading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-3/4" />
+            </div>
+          ) : (
+            <DocumentTree
+              nodes={tree}
+              onArchive={(node) => setArchiveTarget(node)}
+              onReorder={async (parentPath, children) => {
+                try {
+                  await reorderChildren({ parentPath, children });
+                  showToast("Order saved.", "success");
+                } catch {
+                  showToast("Could not save the new order.", "error");
+                }
+              }}
+            />
+          )}
+        </CardContent>
+      </Card>
 
       <ConfirmDialog
         open={Boolean(archiveTarget)}
         title="Archive this document"
         message="You can still find it later, but it will be marked as archived."
         confirmLabel="Archive"
-        onConfirm={() => {
-          void confirmArchive();
-        }}
-        onCancel={() => {
-          setArchiveTarget(null);
-        }}
+        onConfirm={() => void confirmArchive()}
+        onCancel={() => setArchiveTarget(null)}
       />
     </div>
   );

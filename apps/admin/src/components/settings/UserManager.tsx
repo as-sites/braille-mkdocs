@@ -3,6 +3,17 @@ import { useEffect, useState } from "react";
 import { createUser, deleteUser, listUsers, updateUser, type AdminUser } from "../../api/client";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { useToaster } from "../shared/Toaster";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type UserManagerProps = {
   currentUserId: string;
@@ -35,9 +46,7 @@ export function UserManager({ currentUserId }: UserManagerProps) {
   }, []);
 
   async function inviteUser() {
-    if (!inviteName.trim() || !inviteEmail.trim()) {
-      return;
-    }
+    if (!inviteName.trim() || !inviteEmail.trim()) return;
 
     try {
       await createUser({
@@ -66,9 +75,7 @@ export function UserManager({ currentUserId }: UserManagerProps) {
   }
 
   async function confirmDelete() {
-    if (!deleteId) {
-      return;
-    }
+    if (!deleteId) return;
 
     try {
       await deleteUser(deleteId);
@@ -81,97 +88,92 @@ export function UserManager({ currentUserId }: UserManagerProps) {
   }
 
   return (
-    <section className="card form-stack">
-      <h2>Users</h2>
+    <div className="space-y-4">
+      <h2 className="font-semibold text-lg">Users</h2>
 
-      <div className="inline-form inline-form--wrap">
-        <input
+      <div className="flex items-center gap-3 flex-wrap">
+        <Input
           type="text"
           placeholder="Name"
           value={inviteName}
-          onChange={(event) => {
-            setInviteName(event.target.value);
-          }}
+          onChange={(e) => setInviteName(e.target.value)}
+          className="w-40"
         />
-        <input
+        <Input
           type="email"
           placeholder="Email"
           value={inviteEmail}
-          onChange={(event) => {
-            setInviteEmail(event.target.value);
-          }}
+          onChange={(e) => setInviteEmail(e.target.value)}
+          className="w-56"
         />
         <select
           value={inviteRole}
-          onChange={(event) => {
-            setInviteRole(event.target.value as "admin" | "editor");
-          }}
+          onChange={(e) => setInviteRole(e.target.value as "admin" | "editor")}
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
         >
           <option value="editor">Editor</option>
           <option value="admin">Admin</option>
         </select>
-        <button type="button" onClick={inviteUser}>
-          Invite user
-        </button>
+        <Button onClick={inviteUser}>Invite user</Button>
       </div>
 
-      {loading ? <p>Loading users...</p> : null}
-
-      <table className="simple-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Created</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.id}>
-              <td>{user.name}</td>
-              <td>{user.email}</td>
-              <td>
-                <select
-                  value={user.role}
-                  onChange={(event) => {
-                    void changeRole(user.id, event.target.value as "admin" | "editor");
-                  }}
-                >
-                  <option value="editor">Editor</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </td>
-              <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-              <td>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDeleteId(user.id);
-                  }}
-                  disabled={user.id === currentUserId}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {loading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <select
+                    value={user.role}
+                    onChange={(e) => void changeRole(user.id, e.target.value as "admin" | "editor")}
+                    className="h-8 rounded-md border border-input bg-transparent px-2 text-sm"
+                  >
+                    <option value="editor">Editor</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </TableCell>
+                <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive"
+                    onClick={() => setDeleteId(user.id)}
+                    disabled={user.id === currentUserId}
+                  >
+                    Delete
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
 
       <ConfirmDialog
         open={Boolean(deleteId)}
         title="Delete user"
         message="This person will lose access to the admin workspace."
         confirmLabel="Delete user"
-        onConfirm={() => {
-          void confirmDelete();
-        }}
-        onCancel={() => {
-          setDeleteId(null);
-        }}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setDeleteId(null)}
       />
-    </section>
+    </div>
   );
 }

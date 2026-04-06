@@ -1,5 +1,14 @@
+import { X } from "lucide-react";
+
 import type { MediaRecord } from "../../api/media";
 import { MediaLibrary } from "./MediaLibrary";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type MediaPickerProps = {
   onSelect: (media: MediaRecord) => void;
@@ -8,19 +17,13 @@ type MediaPickerProps = {
 
 export function MediaPicker({ onSelect, onClose }: MediaPickerProps) {
   return (
-    <div className="media-picker-overlay" onClick={onClose}>
-      <div className="media-picker" onClick={(e) => e.stopPropagation()}>
-        <div className="media-picker__header">
-          <h2>Select Media</h2>
-          <button type="button" onClick={onClose} aria-label="Close">
-            ✕
-          </button>
-        </div>
-
-        <div className="media-picker__body">
-          <MediaLibrary onSelect={onSelect} />
-        </div>
-      </div>
-    </div>
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Select Media</DialogTitle>
+        </DialogHeader>
+        <MediaLibrary onSelect={onSelect} />
+      </DialogContent>
+    </Dialog>
   );
 }

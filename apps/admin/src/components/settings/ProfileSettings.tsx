@@ -1,5 +1,9 @@
 import { useState, type FormEvent } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 type ProfileSettingsProps = {
   name: string;
   email: string;
@@ -24,61 +28,57 @@ export function ProfileSettings({ name, email }: ProfileSettingsProps) {
   }
 
   return (
-    <form className="card form-stack" onSubmit={onSave}>
-      <h2>Profile</h2>
+    <form className="grid gap-4 max-w-md" onSubmit={onSave}>
+      <h2 className="font-semibold text-lg">Profile</h2>
 
-      <label>
-        Name
-        <input
+      <div className="grid gap-2">
+        <Label htmlFor="profile-name">Name</Label>
+        <Input
+          id="profile-name"
           type="text"
           value={displayName}
-          onChange={(event) => {
-            setDisplayName(event.target.value);
-          }}
+          onChange={(e) => setDisplayName(e.target.value)}
         />
-      </label>
+      </div>
 
-      <label>
-        Email
-        <input type="email" value={email} disabled />
-      </label>
+      <div className="grid gap-2">
+        <Label htmlFor="profile-email">Email</Label>
+        <Input id="profile-email" type="email" value={email} disabled />
+      </div>
 
-      <label>
-        Current password
-        <input
+      <div className="grid gap-2">
+        <Label htmlFor="profile-current-pw">Current password</Label>
+        <Input
+          id="profile-current-pw"
           type="password"
           value={currentPassword}
-          onChange={(event) => {
-            setCurrentPassword(event.target.value);
-          }}
+          onChange={(e) => setCurrentPassword(e.target.value)}
         />
-      </label>
+      </div>
 
-      <label>
-        New password
-        <input
+      <div className="grid gap-2">
+        <Label htmlFor="profile-new-pw">New password</Label>
+        <Input
+          id="profile-new-pw"
           type="password"
           value={newPassword}
-          onChange={(event) => {
-            setNewPassword(event.target.value);
-          }}
+          onChange={(e) => setNewPassword(e.target.value)}
         />
-      </label>
+      </div>
 
-      <label>
-        Confirm new password
-        <input
+      <div className="grid gap-2">
+        <Label htmlFor="profile-confirm-pw">Confirm new password</Label>
+        <Input
+          id="profile-confirm-pw"
           type="password"
           value={confirmPassword}
-          onChange={(event) => {
-            setConfirmPassword(event.target.value);
-          }}
+          onChange={(e) => setConfirmPassword(e.target.value)}
         />
-      </label>
+      </div>
 
-      {message ? <p>{message}</p> : null}
+      {message && <p className="text-sm text-muted-foreground">{message}</p>}
 
-      <button type="submit">Save profile</button>
+      <Button type="submit">Save profile</Button>
     </form>
   );
 }

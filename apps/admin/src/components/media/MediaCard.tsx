@@ -1,4 +1,6 @@
 import type { MediaRecord } from "../../api/media";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 type MediaCardProps = {
   media: MediaRecord;
@@ -18,53 +20,63 @@ export function MediaCard({ media, onSelect, onDelete, onEdit, selected }: Media
   const isImage = media.mimeType.startsWith("image/");
 
   return (
-    <div
-      className={`media-card${selected ? " media-card--selected" : ""}`}
+    <Card
+      className={`cursor-pointer transition-colors hover:border-primary/50 ${selected ? "border-primary ring-1 ring-primary" : ""}`}
       onClick={() => onSelect?.(media)}
     >
-      <div className="media-card__thumb">
-        {isImage ? (
-          <img src={media.url} alt={media.altText ?? media.filename} />
-        ) : (
-          <div className="media-card__thumb-placeholder">PDF</div>
-        )}
-      </div>
-
-      <div className="media-card__info">
-        <p className="media-card__filename" title={media.filename}>
-          {media.filename}
-        </p>
-        <p className="media-card__meta">
-          {formatBytes(media.sizeBytes)}
-          {media.width && media.height ? ` · ${media.width}×${media.height}` : ""}
-        </p>
-        {media.altText ? (
-          <p className="media-card__alt" title={media.altText}>
-            Alt: {media.altText}
-          </p>
-        ) : null}
-      </div>
-
-      {(onEdit || onDelete) && (
-        <div className="media-card__actions">
-          {onEdit && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onEdit(media); }}
-            >
-              Edit
-            </button>
-          )}
-          {onDelete && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onDelete(media); }}
-            >
-              Delete
-            </button>
+      <CardContent className="p-2 space-y-2">
+        <div className="aspect-square rounded-md overflow-hidden bg-muted flex items-center justify-center">
+          {isImage ? (
+            <img
+              src={media.url}
+              alt={media.altText ?? media.filename}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-2xl font-bold text-muted-foreground">PDF</span>
           )}
         </div>
-      )}
-    </div>
+
+        <div className="space-y-0.5">
+          <p className="text-sm font-medium truncate" title={media.filename}>
+            {media.filename}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {formatBytes(media.sizeBytes)}
+            {media.width && media.height ? ` \u00b7 ${media.width}\u00d7${media.height}` : ""}
+          </p>
+          {media.altText && (
+            <p className="text-xs text-muted-foreground truncate" title={media.altText}>
+              Alt: {media.altText}
+            </p>
+          )}
+        </div>
+
+        {(onEdit || onDelete) && (
+          <div className="flex gap-1">
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={(e) => { e.stopPropagation(); onEdit(media); }}
+              >
+                Edit
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-destructive"
+                onClick={(e) => { e.stopPropagation(); onDelete(media); }}
+              >
+                Delete
+              </Button>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

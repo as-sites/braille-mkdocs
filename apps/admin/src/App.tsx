@@ -1,8 +1,9 @@
 import { BrowserRouter, Link, Route, Routes } from "react-router";
+import { Toaster } from "sonner";
 
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminLayout } from "./components/layout/AdminLayout";
-import { ToastProvider } from "./components/shared/Toaster";
 import { DashboardPage } from "./pages/DashboardPage";
 import { DocumentBrowserPage } from "./pages/DocumentBrowserPage";
 import { DocumentEditPage } from "./pages/DocumentEditPage";
@@ -15,7 +16,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 
 export function App() {
   return (
-    <ToastProvider>
+    <TooltipProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -36,16 +37,21 @@ export function App() {
           <Route
             path="*"
             element={
-              <main>
-                <h1>Not Found</h1>
-                <p>
-                  <Link to="/">Go to dashboard</Link>
-                </p>
+              <main className="flex items-center justify-center min-h-screen">
+                <div className="text-center space-y-4">
+                  <h1 className="text-2xl font-bold">Not Found</h1>
+                  <p>
+                    <Link to="/" className="text-primary underline">
+                      Go to dashboard
+                    </Link>
+                  </p>
+                </div>
               </main>
             }
           />
         </Routes>
       </BrowserRouter>
-    </ToastProvider>
+      <Toaster position="bottom-right" richColors />
+    </TooltipProvider>
   );
 }

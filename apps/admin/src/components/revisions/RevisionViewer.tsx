@@ -1,6 +1,7 @@
 import type { JSONContent } from "@tiptap/react";
 
 import { Editor } from "../editor/Editor";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type RevisionViewerProps = {
   content: JSONContent;
@@ -8,9 +9,13 @@ type RevisionViewerProps = {
 
 export function RevisionViewer({ content }: RevisionViewerProps) {
   return (
-    <div className="card">
-      <h2>Revision content</h2>
-      <Editor initialContent={content} onUpdate={() => {}} editable={false} />
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Revision content</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Editor initialContent={content} onUpdate={() => {}} editable={false} />
+      </CardContent>
+    </Card>
   );
 }

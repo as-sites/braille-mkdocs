@@ -3,6 +3,18 @@ import { useEffect, useState } from "react";
 import { createApiKey, listApiKeys, revokeApiKey, type AdminApiKey } from "../../api/client";
 import { ConfirmDialog } from "../shared/ConfirmDialog";
 import { useToaster } from "../shared/Toaster";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function ApiKeyManager() {
   const { showToast } = useToaster();
@@ -30,9 +42,7 @@ export function ApiKeyManager() {
   }, []);
 
   async function generate() {
-    if (!newName.trim()) {
-      return;
-    }
+    if (!newName.trim()) return;
 
     try {
       const created = await createApiKey(newName.trim());
@@ -46,9 +56,7 @@ export function ApiKeyManager() {
   }
 
   async function confirmRevoke() {
-    if (!revokeId) {
-      return;
-    }
+    if (!revokeId) return;
 
     try {
       await revokeApiKey(revokeId);
@@ -61,84 +69,87 @@ export function ApiKeyManager() {
   }
 
   return (
-    <section className="card form-stack">
-      <h2>API keys</h2>
-      <p>Create keys for tools that need access to your documents.</p>
+    <div className="space-y-4">
+      <h2 className="font-semibold text-lg">API keys</h2>
+      <p className="text-sm text-muted-foreground">Create keys for tools that need access to your documents.</p>
 
-      <div className="inline-form">
-        <input
+      <div className="flex items-center gap-3 flex-wrap">
+        <Input
           type="text"
           placeholder="Key name"
           value={newName}
-          onChange={(event) => {
-            setNewName(event.target.value);
-          }}
+          onChange={(e) => setNewName(e.target.value)}
+          className="w-64"
         />
-        <button type="button" onClick={generate}>
-          Generate new key
-        </button>
+        <Button onClick={generate}>Generate new key</Button>
       </div>
 
-      {rawKey ? (
-        <div className="warning-box">
-          <p>Copy this key now. You will not be able to view it again.</p>
-          <code>{rawKey}</code>
-          <button
-            type="button"
-            onClick={() => {
-              void navigator.clipboard.writeText(rawKey);
-              showToast("Key copied.", "success");
-            }}
-          >
-            Copy key
-          </button>
+      {rawKey && (
+        <Alert variant="destructive">
+          <AlertDescription className="space-y-2">
+            <p>Copy this key now. You will not be able to view it again.</p>
+            <code className="block bg-destructive/10 border border-destructive/30 rounded-md p-2 text-sm break-all">
+              {rawKey}
+            </code>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                void navigator.clipboard.writeText(rawKey);
+                showToast("Key copied.", "success");
+              }}
+            >
+              Copy key
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {loading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
         </div>
-      ) : null}
-
-      {loading ? <p>Loading keys...</p> : null}
-
-      <table className="simple-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Created</th>
-            <th>Last used</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {keys.map((key) => (
-            <tr key={key.id}>
-              <td>{key.name}</td>
-              <td>{new Date(key.createdAt).toLocaleDateString()}</td>
-              <td>{key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : "Never"}</td>
-              <td>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRevokeId(key.id);
-                  }}
-                >
-                  Revoke
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Last used</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {keys.map((key) => (
+              <TableRow key={key.id}>
+                <TableCell>{key.name}</TableCell>
+                <TableCell>{new Date(key.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell>{key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : "Never"}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive"
+                    onClick={() => setRevokeId(key.id)}
+                  >
+                    Revoke
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
 
       <ConfirmDialog
         open={Boolean(revokeId)}
         title="Revoke API key"
         message="This key will stop working immediately."
         confirmLabel="Revoke key"
-        onConfirm={() => {
-          void confirmRevoke();
-        }}
-        onCancel={() => {
-          setRevokeId(null);
-        }}
+        onConfirm={() => void confirmRevoke()}
+        onCancel={() => setRevokeId(null)}
       />
-    </section>
+    </div>
   );
 }

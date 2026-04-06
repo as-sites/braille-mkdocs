@@ -3,11 +3,28 @@ import { deleteMedia, listMedia, updateMedia } from "../../api/media";
 import type { MediaRecord } from "../../api/media";
 import { MediaCard } from "./MediaCard";
 import { MediaUpload } from "./MediaUpload";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PAGE_SIZE = 24;
 
 type MediaLibraryProps = {
-  /** When provided, clicking a card calls this instead of opening edit detail */
   onSelect?: (media: MediaRecord) => void;
 };
 
@@ -24,7 +41,7 @@ export function MediaLibrary({ onSelect }: MediaLibraryProps) {
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [search, setSearch] = useState("");
-  const [mimeType, setMimeType] = useState("");
+  const [mimeType, setMimeType] = useState("all");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [edit, setEdit] = useState<EditState | null>(null);
@@ -36,7 +53,7 @@ export function MediaLibrary({ onSelect }: MediaLibraryProps) {
     try {
       const result = await listMedia({
         search: nextSearch || undefined,
-        mimeType: nextMimeType || undefined,
+        mimeType: nextMimeType === "all" ? undefined : nextMimeType,
         limit: PAGE_SIZE,
         offset: nextOffset,
       });
@@ -94,9 +111,7 @@ export function MediaLibrary({ onSelect }: MediaLibraryProps) {
   }
 
   async function handleDelete(media: MediaRecord) {
-    const confirmed = window.confirm(
-      `Delete "${media.filename}"? This cannot be undone.`,
-    );
+    const confirmed = window.confirm(`Delete "${media.filename}"? This cannot be undone.`);
     if (!confirmed) return;
 
     try {
@@ -116,36 +131,46 @@ export function MediaLibrary({ onSelect }: MediaLibraryProps) {
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
   return (
-    <div className="media-library">
+    <div className="space-y-4">
       <MediaUpload onUploaded={handleUploaded} />
 
-      <div className="media-library__filters">
-        <input
+      <div className="flex items-center gap-3 flex-wrap">
+        <Input
           type="search"
           placeholder="Search by filename or alt text..."
           value={search}
           onChange={(e) => { setSearch(e.target.value); setOffset(0); }}
+          className="w-64"
         />
 
-        <select value={mimeType} onChange={(e) => { setMimeType(e.target.value); setOffset(0); }}>
-          <option value="">All types</option>
-          <option value="image/png">PNG</option>
-          <option value="image/jpeg">JPEG</option>
-          <option value="image/gif">GIF</option>
-          <option value="image/svg+xml">SVG</option>
-          <option value="image/webp">WebP</option>
-          <option value="application/pdf">PDF</option>
-        </select>
+        <Select value={mimeType} onValueChange={(v) => { setMimeType(v); setOffset(0); }}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All types</SelectItem>
+            <SelectItem value="image/png">PNG</SelectItem>
+            <SelectItem value="image/jpeg">JPEG</SelectItem>
+            <SelectItem value="image/gif">GIF</SelectItem>
+            <SelectItem value="image/svg+xml">SVG</SelectItem>
+            <SelectItem value="image/webp">WebP</SelectItem>
+            <SelectItem value="application/pdf">PDF</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {error && <p className="media-library__error">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-square rounded-lg" />
+          ))}
+        </div>
       ) : items.length === 0 ? (
-        <p className="media-library__empty">No media found.</p>
+        <p className="text-sm text-muted-foreground text-center py-8">No media found.</p>
       ) : (
-        <div className="media-library__grid">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {items.map((m) => (
             <MediaCard
               key={m.id}
@@ -159,76 +184,82 @@ export function MediaLibrary({ onSelect }: MediaLibraryProps) {
       )}
 
       {totalPages > 1 && (
-        <div className="media-library__pagination">
-          <button
-            type="button"
+        <div className="flex items-center justify-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
             disabled={offset === 0}
             onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
           >
             Previous
-          </button>
-          <span>Page {currentPage} of {totalPages}</span>
-          <button
-            type="button"
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
             disabled={offset + PAGE_SIZE >= total}
             onClick={() => setOffset(offset + PAGE_SIZE)}
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
 
-      {edit && (
-        <div className="media-detail-overlay" onClick={() => setEdit(null)}>
-          <div className="media-detail" onClick={(e) => e.stopPropagation()}>
-            <h2>Edit Media</h2>
+      <Dialog open={Boolean(edit)} onOpenChange={(v) => !v && setEdit(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Media</DialogTitle>
+          </DialogHeader>
 
-            {edit.media.mimeType.startsWith("image/") && (
-              <img
-                src={edit.media.url}
-                alt={edit.media.altText ?? edit.media.filename}
-                className="media-detail__preview"
-              />
-            )}
+          {edit && (
+            <div className="space-y-4">
+              {edit.media.mimeType.startsWith("image/") && (
+                <img
+                  src={edit.media.url}
+                  alt={edit.media.altText ?? edit.media.filename}
+                  className="w-full max-h-64 object-contain rounded-md bg-muted"
+                />
+              )}
 
-            <label>
-              Filename
-              <input
-                type="text"
-                value={edit.filename}
-                onChange={(e) => setEdit((prev) => prev && { ...prev, filename: e.target.value })}
-              />
-            </label>
+              <div className="grid gap-2">
+                <Label>Filename</Label>
+                <Input
+                  type="text"
+                  value={edit.filename}
+                  onChange={(e) => setEdit((prev) => prev && { ...prev, filename: e.target.value })}
+                />
+              </div>
 
-            <label>
-              Alt text
-              <input
-                type="text"
-                value={edit.altText}
-                onChange={(e) => setEdit((prev) => prev && { ...prev, altText: e.target.value })}
-              />
-            </label>
+              <div className="grid gap-2">
+                <Label>Alt text</Label>
+                <Input
+                  type="text"
+                  value={edit.altText}
+                  onChange={(e) => setEdit((prev) => prev && { ...prev, altText: e.target.value })}
+                />
+              </div>
 
-            <p className="media-detail__meta">
-              {edit.media.mimeType} · {(edit.media.sizeBytes / 1024).toFixed(1)} KB
-              {edit.media.width && edit.media.height
-                ? ` · ${edit.media.width}×${edit.media.height}`
-                : ""}
-            </p>
+              <p className="text-sm text-muted-foreground">
+                {edit.media.mimeType} &middot; {(edit.media.sizeBytes / 1024).toFixed(1)} KB
+                {edit.media.width && edit.media.height
+                  ? ` \u00b7 ${edit.media.width}\u00d7${edit.media.height}`
+                  : ""}
+              </p>
 
-            {edit.error && <p className="status-error">{edit.error}</p>}
-
-            <div className="media-detail__actions">
-              <button type="button" onClick={handleSaveEdit} disabled={edit.saving}>
-                {edit.saving ? "Saving..." : "Save"}
-              </button>
-              <button type="button" onClick={() => setEdit(null)}>
-                Cancel
-              </button>
+              {edit.error && <p className="text-sm text-destructive">{edit.error}</p>}
             </div>
-          </div>
-        </div>
-      )}
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEdit(null)}>Cancel</Button>
+            <Button onClick={handleSaveEdit} disabled={edit?.saving}>
+              {edit?.saving ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

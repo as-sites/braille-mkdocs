@@ -3,6 +3,15 @@ import { Link } from "react-router";
 
 import { listDocuments, type AdminDocumentSummary } from "../api/client";
 import { StatusBadge } from "../components/documents/StatusBadge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function relativeTime(value: string) {
   const now = Date.now();
@@ -43,64 +52,93 @@ export function DashboardPage() {
           listDocuments({ status: "published", limit: 10 }),
         ]);
 
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
         setRecentlyEdited(edited.items);
         setRecentPublishes(published.items);
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     }
 
     void load();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   return (
-    <div className="page-stack">
-      <section className="card">
-        <h1>Dashboard</h1>
-        <p>Welcome back. Pick up where you left off.</p>
-        <div className="quick-links">
-          <Link to="/documents/new">Create document</Link>
-          <Link to="/documents">Browse documents</Link>
-          <Link to="/settings">Open settings</Link>
-        </div>
-      </section>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Dashboard</CardTitle>
+          <CardDescription>Welcome back. Pick up where you left off.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" asChild>
+              <Link to="/documents/new">Create document</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/documents">Browse documents</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/settings">Open settings</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      <section className="card">
-        <h2>Recently edited</h2>
-        {loading ? <p>Loading...</p> : null}
-        <ul className="simple-list">
-          {recentlyEdited.map((doc) => (
-            <li key={doc.id}>
-              <Link to={`/documents/${doc.id}/edit`}>{doc.title}</Link>
-              <StatusBadge status={doc.status} />
-              <small>{relativeTime(doc.updatedAt)}</small>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Recently edited</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ) : (
+            <ul className="space-y-2 list-none p-0 m-0">
+              {recentlyEdited.map((doc) => (
+                <li key={doc.id} className="flex items-center gap-3 flex-wrap">
+                  <Link to={`/documents/${doc.id}/edit`} className="font-medium text-primary hover:underline">
+                    {doc.title}
+                  </Link>
+                  <StatusBadge status={doc.status} />
+                  <span className="text-sm text-muted-foreground">{relativeTime(doc.updatedAt)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
-      <section className="card">
-        <h2>Recent publishes</h2>
-        {loading ? <p>Loading...</p> : null}
-        <ul className="simple-list">
-          {recentPublishes.map((doc) => (
-            <li key={doc.id}>
-              <Link to={`/documents/${doc.id}/preview`}>{doc.title}</Link>
-              <small>{doc.publishedAt ? relativeTime(doc.publishedAt) : "Not published"}</small>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Recent publishes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ) : (
+            <ul className="space-y-2 list-none p-0 m-0">
+              {recentPublishes.map((doc) => (
+                <li key={doc.id} className="flex items-center gap-3 flex-wrap">
+                  <Link to={`/documents/${doc.id}/preview`} className="font-medium text-primary hover:underline">
+                    {doc.title}
+                  </Link>
+                  <span className="text-sm text-muted-foreground">
+                    {doc.publishedAt ? relativeTime(doc.publishedAt) : "Not published"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

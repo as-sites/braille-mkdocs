@@ -1,5 +1,16 @@
 import { useState, type FormEvent } from "react";
 
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 const authBaseUrl = import.meta.env.VITE_API_URL ?? "";
 
 type LoginFormProps = {
@@ -14,7 +25,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     setLoading(true);
     setError(null);
 
@@ -22,14 +32,8 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       const response = await fetch(`${authBaseUrl}/api/auth/sign-in/email`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          rememberMe: true,
-        }),
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password, rememberMe: true }),
       });
 
       if (!response.ok) {
@@ -39,16 +43,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             code?: string;
             message?: string;
           };
-
-          if (payload.message) {
-            errorMessage = payload.message;
-          }
-
-          if (payload.code) {
-            errorMessage = `${errorMessage} [${payload.code}]`;
-          }
+          if (payload.message) errorMessage = payload.message;
+          if (payload.code) errorMessage = `${errorMessage} [${payload.code}]`;
         } catch {
-          // Ignore non-JSON responses and keep default message.
+          // Ignore non-JSON responses
         }
         setError(errorMessage);
         return;
@@ -63,38 +61,44 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   }
 
   return (
-    <form className="card form-stack" onSubmit={onSubmit}>
-      <label>
-        Email
-        <input
-          autoComplete="email"
-          type="email"
-          value={email}
-          onChange={(event) => {
-            setEmail(event.target.value);
-          }}
-          required
-        />
-      </label>
+    <Card className="w-full max-w-sm">
+      <CardHeader className="text-center">
+        <CardTitle className="text-xl">Braille Docs Admin</CardTitle>
+        <CardDescription>Sign in to continue</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={onSubmit} className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
 
-      <label>
-        Password
-        <input
-          autoComplete="current-password"
-          type="password"
-          value={password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-          }}
-          required
-        />
-      </label>
+          <div className="grid gap-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
 
-      {error ? <p className="status-error">{error}</p> : null}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <button type="submit" disabled={loading}>
-        {loading ? "Signing in..." : "Sign in"}
-      </button>
-    </form>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
