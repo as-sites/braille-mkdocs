@@ -1,15 +1,16 @@
-FROM alpine:3.20 AS builder
+FROM debian:bookworm-slim AS builder
 
 ENV MISE_DATA_DIR=/mise
 ENV MISE_CONFIG_DIR=/mise
 ENV MISE_CACHE_DIR=/mise/cache
 ENV MISE_INSTALL_PATH=/usr/local/bin/mise
-ENV MISE_LIBC=musl
 ENV PATH=/mise/shims:$PATH
 
 WORKDIR /app
 
-RUN apk add --no-cache bash curl ca-certificates python3 \
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends bash curl ca-certificates xz-utils \
+  && rm -rf /var/lib/apt/lists/* \
   && curl https://mise.run | sh
 
 COPY mise.toml /app/mise.toml
@@ -31,13 +32,12 @@ RUN pnpm --filter @braille-docs/db build \
   && pnpm --filter @braille-docs/shared build \
   && pnpm --filter @braille-docs/web build
 
-FROM alpine:3.20 AS runner
+FROM debian:bookworm-slim AS runner
 
 ENV MISE_DATA_DIR=/mise
 ENV MISE_CONFIG_DIR=/mise
 ENV MISE_CACHE_DIR=/mise/cache
 ENV MISE_INSTALL_PATH=/usr/local/bin/mise
-ENV MISE_LIBC=musl
 ENV PATH=/mise/shims:$PATH
 
 WORKDIR /app
@@ -45,7 +45,9 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-RUN apk add --no-cache ca-certificates
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app /app
 COPY --from=builder /mise /mise
