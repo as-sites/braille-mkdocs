@@ -8,6 +8,13 @@
       "when": 1775466902104,
       "tag": "0000_mighty_blue_blade",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1775440142629,
+      "tag": "0001_user_invites",
+      "breakpoints": true
     }
   ]
 }

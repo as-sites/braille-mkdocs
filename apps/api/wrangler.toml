@@ -2,6 +2,7 @@ name = "braille-wiki-api"
 main = "src/worker.ts"
 compatibility_date = "2026-04-06"
 compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
+alias = { "@braille-wiki/editor-schema/server" = "../../packages/editor-schema/src/serializer-server.ts" }
 
 [vars]
 NODE_ENV = "production"

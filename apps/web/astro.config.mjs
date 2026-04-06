@@ -1,6 +1,7 @@
 import { defineConfig, memoryCache } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
 import starlight from "@astrojs/starlight";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   site: "https://braille-wiki.pages.dev",
@@ -30,6 +31,18 @@ export default defineConfig({
   experimental: {
     cache: {
       provider: memoryCache(),
+    },
+  },
+  vite: {
+    resolve: {
+      alias: {
+        "@braille-wiki/db": fileURLToPath(
+          new URL("../../packages/db/src/index.ts", import.meta.url),
+        ),
+        "@braille-wiki/shared": fileURLToPath(
+          new URL("../../packages/shared/src/index.ts", import.meta.url),
+        ),
+      },
     },
   },
 });

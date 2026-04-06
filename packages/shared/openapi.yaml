@@ -9,6 +9,7 @@ info:
     - **MCP server & external integrations** (API key auth) — programmatic read/write access
 
     Does NOT cover better-auth's built-in `/api/auth/*` routes or the MCP protocol endpoint (`POST /mcp`).
+    Exception: this spec includes custom invite onboarding endpoints under `/api/auth/invite/*`.
 
 servers:
   - url: /
@@ -29,6 +30,8 @@ tags:
     description: Media upload and management
   - name: Users
     description: User management (admin role only)
+  - name: Invites
+    description: User invite lifecycle and password onboarding
   - name: API Keys
     description: API key generation and revocation
   - name: Search
@@ -84,6 +87,14 @@ components:
         type: string
         format: uuid
       description: User UUID
+    InviteId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Invite UUID
     ApiKeyId:
       name: id
       in: path
@@ -393,6 +404,100 @@ components:
         role:
           type: string
           enum: [admin, editor]
+
+    UserInvite:
+      type: object
+      required: [id, user_id, email, role, status, expires_at, created_by, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, editor]
+        status:
+          type: string
+          enum: [pending, accepted, revoked, expired]
+        expires_at:
+          type: string
+          format: date-time
+        accepted_at:
+          type: ["string", "null"]
+          format: date-time
+        revoked_at:
+          type: ["string", "null"]
+          format: date-time
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateUserInviteRequest:
+      type: object
+      required: [name, email, role]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, editor]
+
+    VerifyInviteRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+
+    VerifyInviteResponse:
+      type: object
+      required: [valid, status]
+      properties:
+        valid:
+          type: boolean
+        status:
+          type: string
+          enum: [pending, accepted, revoked, expired, invalid]
+        email_masked:
+          type: ["string", "null"]
+        expires_at:
+          type: ["string", "null"]
+          format: date-time
+
+    AcceptInviteRequest:
+      type: object
+      required: [token, password]
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 12
+        name:
+          type: string
+
+    AcceptInviteResponse:
+      type: object
+      required: [success, user]
+      properties:
+        success:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/User"
 
     # ── API Keys ───────────────────────────────────────────────
 
@@ -1341,6 +1446,159 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/admin/users/invites:
+    get:
+      operationId: listUserInvites
+      summary: List user invites
+      tags: [Users, Invites]
+      security:
+        - sessionAuth: []
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: List of invites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserInvite"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Insufficient permissions (admin role required)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      operationId: createUserInvite
+      summary: Create and send a user invite
+      tags: [Users, Invites]
+      security:
+        - sessionAuth: []
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserInviteRequest"
+      responses:
+        "201":
+          description: Invite created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInvite"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Active invite or active user conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/admin/users/invites/{id}/resend:
+    post:
+      operationId: resendUserInvite
+      summary: Resend a pending invite
+      tags: [Users, Invites]
+      security:
+        - sessionAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/InviteId"
+      responses:
+        "200":
+          description: Invite resent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInvite"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Invite not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Invite cannot be resent in current status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/admin/users/invites/{id}/revoke:
+    post:
+      operationId: revokeUserInvite
+      summary: Revoke a pending invite
+      tags: [Users, Invites]
+      security:
+        - sessionAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/InviteId"
+      responses:
+        "200":
+          description: Invite revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInvite"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Invite not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/admin/users/{id}:
     put:
       operationId: updateUser
@@ -1385,6 +1643,62 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/auth/invite/verify:
+    post:
+      operationId: verifyInviteToken
+      summary: Verify invite token validity
+      tags: [Invites]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyInviteRequest"
+      responses:
+        "200":
+          description: Invite token status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyInviteResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/auth/invite/accept:
+    post:
+      operationId: acceptInvite
+      summary: Accept invite and set password
+      tags: [Invites]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptInviteRequest"
+      responses:
+        "200":
+          description: Invite accepted and account activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptInviteResponse"
+        "400":
+          description: Validation error or unusable token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Invite already used/revoked/expired
           content:
             application/json:
               schema:
