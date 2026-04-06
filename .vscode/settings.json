@@ -47,6 +47,10 @@
         "/^pnpm --filter @braille-docs/db typecheck$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^pnpm install --filter @braille-docs/api$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }
