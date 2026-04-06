@@ -18,11 +18,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Prevent rewrite loops: /render is the target, skip it
   if (pathname === "/render") return next();
 
-  const requestedPath = pathname
-    .replace(/^\//, "")
-    .split("/")
-    .filter(Boolean)
-    .join("/");
+  const segments = pathname.split("/").filter(Boolean);
+
+  // Reject dot-prefixed segments (.git, .env, .htaccess, etc.) — never valid document paths
+  if (segments.some((seg) => seg.startsWith("."))) {
+    return new Response("Not Found", { status: 404 });
+  }
+
+  const requestedPath = segments.join("/");
 
   if (!requestedPath) return next();
 

@@ -2,6 +2,13 @@ name = "braille-wiki-web"
 compatibility_date = "2026-04-06"
 compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
 
+[vars]
+PUBLIC_API_URL = "https://api.braille.ay.ms"
+
+# Secrets (set via: wrangler secret put <NAME> --name braille-wiki-web)
+# DATABASE_URL
+# INTERNAL_SECRET
+
 [assets]
 directory = "./dist/client"
 binding = "ASSETS"

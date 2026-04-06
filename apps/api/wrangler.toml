@@ -6,6 +6,11 @@ compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
 [vars]
 NODE_ENV = "production"
 R2_PUBLIC_URL = "https://s3.braille.ay.ms"
+ADMIN_ORIGIN = "https://admin.braille.ay.ms"
+
+# Secrets (set via: wrangler secret put <NAME> --name braille-wiki-api)
+# DATABASE_URL
+# BETTER_AUTH_SECRET
 
 [[r2_buckets]]
 binding = "MEDIA_BUCKET"
