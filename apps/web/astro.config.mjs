@@ -1,7 +1,7 @@
 import { defineConfig, memoryCache } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
 import starlight from "@astrojs/starlight";
-import { fileURLToPath } from "node:url";
+import { URL, fileURLToPath } from "node:url";
 
 export default defineConfig({
   site: "https://braille-wiki.pages.dev",
