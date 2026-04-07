@@ -121,6 +121,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Verify migrations
+        working-directory: packages/db
         run: |
           node -e "
             const { neon } = require('@neondatabase/serverless');
