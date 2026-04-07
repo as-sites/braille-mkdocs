@@ -126,7 +126,7 @@ jobs:
           node -e "
             const { neon } = require('@neondatabase/serverless');
             const sql = neon(process.env.DATABASE_URL);
-            sql('SELECT id, hash FROM drizzle.__drizzle_migrations ORDER BY created_at')
+            sql.query('SELECT id, hash FROM drizzle.__drizzle_migrations ORDER BY created_at')
               .then(r => { console.log('Applied migrations:', JSON.stringify(r, null, 2)); })
               .catch(e => { console.error(e.message); process.exit(1); });
           "
