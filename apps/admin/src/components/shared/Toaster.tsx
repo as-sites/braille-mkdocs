@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
 type ToastKind = "success" | "error" | "info";
@@ -8,19 +9,12 @@ type ToastKind = "success" | "error" | "info";
  * throughout the admin app.
  */
 export function useToaster() {
-  return {
-    showToast(message: string, kind: ToastKind = "info") {
-      if (kind === "success") toast.success(message);
-      else if (kind === "error") toast.error(message);
-      else toast(message);
-    },
-  };
+  const showToast = useCallback((message: string, kind: ToastKind = "info") => {
+    if (kind === "success") toast.success(message);
+    else if (kind === "error") toast.error(message);
+    else toast(message);
+  }, []);
+
+  return useMemo(() => ({ showToast }), [showToast]);
 }
 
-/**
- * @deprecated — no longer needed. <Toaster /> from sonner is rendered in App.tsx.
- * Kept for import compatibility during migration.
- */
-export function ToastProvider({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}

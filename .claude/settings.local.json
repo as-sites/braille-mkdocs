@@ -15,7 +15,17 @@
       "Bash(pnpm outdated:*)",
       "Bash(pnpm build:*)",
       "mcp__Neon__get_database_tables",
-      "mcp__Neon__run_sql"
+      "mcp__Neon__run_sql",
+      "Bash(find /P/braille-wiki/apps/admin/src -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
+      "Bash(grep -r \"vm\\\\|vm\\\\.Context\\\\|contextifiedObject\" /p/braille-wiki/packages --include=*.ts --include=*.js)",
+      "Bash(grep -r \"vm\\\\|vm\\\\.Context\\\\|contextifiedObject\" /p/braille-wiki/apps/api --include=*.ts --include=*.js)",
+      "Bash(xargs ls:*)",
+      "Bash(find /p/braille-wiki/node_modules/.pnpm/@tiptap+html@3.22.2_*/node_modules/@tiptap/html/dist/server -type f -name \"*.js\")",
+      "Bash(xargs grep:*)",
+      "Bash(xargs cat:*)",
+      "Bash(pnpm tsc:*)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

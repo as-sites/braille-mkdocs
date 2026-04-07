@@ -110,7 +110,25 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Debug connection target
+        run: echo "$DATABASE_URL" | sed -E 's|://[^@]+@|://***@|'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Run migrations
         run: pnpm --filter @braille-wiki/db db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Verify migrations
+        run: |
+          node -e "
+            const { Client } = require('pg');
+            const c = new Client({ connectionString: process.env.DATABASE_URL });
+            c.connect().then(() =>
+              c.query('SELECT id, hash FROM drizzle.__drizzle_migrations ORDER BY created_at')
+            ).then(r => { console.log('Applied migrations:', JSON.stringify(r.rows, null, 2)); return c.end(); })
+            .catch(e => { console.error(e.message); process.exit(1); });
+          "
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
