@@ -266,7 +266,11 @@ export function registerAdminDocumentRoutes(app: OpenAPIHono) {
     const body = await c.req.json();
 
     try {
-      const document = await services.saveDocument(id, body, user.id);
+      const document = await services.saveDocument(id, {
+        title: body.title,
+        description: body.description,
+        prosemirrorJson: body.prosemirrorJson ?? body.prosemirror_json,
+      }, user.id);
       return c.json(document);
     } catch (error) {
       if (error instanceof NotFoundError) {

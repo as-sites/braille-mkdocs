@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import type { JSONContent } from "@tiptap/react";
 
@@ -41,9 +41,8 @@ function safeParseMetadata(value: string): Record<string, unknown> | null {
   return parsed as Record<string, unknown>;
 }
 
-function getEditorDoc(document: AdminDocument | null, editorJson: JSONContent): JSONContent {
-  if (!document) return editorJson;
-  const source = document.prosemirrorJson as JSONContent | null;
+function toEditorContent(prosemirrorJson: unknown): JSONContent {
+  const source = prosemirrorJson as JSONContent | null;
   return source && source.type ? source : EMPTY_DOC;
 }
 
@@ -53,6 +52,9 @@ export function DocumentEditPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [document, setDocument] = useState<AdminDocument | null>(null);
+  // initialEditorContent: set only on document load — drives editor hydration
+  const [initialEditorContent, setInitialEditorContent] = useState<JSONContent>(EMPTY_DOC);
+  // editorJson: updated on every keystroke — used for save payload
   const [editorJson, setEditorJson] = useState<JSONContent>(EMPTY_DOC);
   const [dirty, setDirty] = useState(false);
   const [lastSaveTime, setLastSaveTime] = useState<string | null>(null);
@@ -79,7 +81,9 @@ export function DocumentEditPage() {
         if (cancelled) return;
 
         setDocument(nextDocument);
-        setEditorJson((nextDocument.prosemirrorJson as JSONContent | null) ?? EMPTY_DOC);
+        const content = toEditorContent(nextDocument.prosemirrorJson);
+        setInitialEditorContent(content);
+        setEditorJson(content);
         setTitle(nextDocument.title);
         setDescription(nextDocument.description ?? "");
         setMetadataText(JSON.stringify(nextDocument.metadata ?? {}, null, 2));
@@ -107,7 +111,6 @@ export function DocumentEditPage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [dirty]);
 
-  const editorContent = useMemo(() => getEditorDoc(document, editorJson), [document, editorJson]);
 
   async function onSave() {
     if (!id) return;
@@ -193,7 +196,7 @@ export function DocumentEditPage() {
         <Card>
           <CardContent className="p-0">
             <Editor
-              initialContent={editorContent}
+              initialContent={initialEditorContent}
               onUpdate={(nextJson) => {
                 setEditorJson(nextJson);
                 setDirty(true);
